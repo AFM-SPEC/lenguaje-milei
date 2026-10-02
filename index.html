@@ -118,9 +118,12 @@ h1 {
 .escala span { min-width: 0; transition: flex-grow .3s ease; }
 .escala .s0 { background: var(--lv0); } .escala .s1 { background: var(--lv1); } .escala .s2 { background: var(--lv2); }
 
-.lema { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--ink-2); cursor: pointer; max-width: 70ch; }
-.lema input { margin: 3px 0 0; width: 16px; height: 16px; accent-color: var(--lv2); flex: none; }
+.lema { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; margin: 0; padding: 0; border: 0; font-size: 14px; color: var(--ink-2); }
+.lema legend { float: left; padding: 0; margin-right: 2px; }
 .lema small { color: var(--muted); font-size: 13px; }
+.lema label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.lema input { margin: 0; width: 16px; height: 16px; accent-color: var(--navy); flex: none; cursor: pointer; }
+.lema .sw { margin-right: -2px; }
 
 /* ---------- gráfico ---------- */
 .chart-sec { margin-top: 34px; }
@@ -218,7 +221,8 @@ mark { color: inherit; border-radius: 1px; padding: 0 1px; }
 mark.m1 { background: var(--hl1); box-shadow: inset 0 -2px 0 var(--lv1); }
 mark.m2 { background: var(--hl2); box-shadow: inset 0 -2px 0 var(--lv2); font-weight: 600; }
 mark.m0 { background: none; text-decoration: underline dotted var(--muted); text-underline-offset: 3px; }
-.lema-on mark.m0 { background: var(--hl2); box-shadow: inset 0 -2px 0 var(--lv2); text-decoration: none; font-weight: 600; }
+.lema-procaz mark.m0 { background: var(--hl2); box-shadow: inset 0 -2px 0 var(--lv2); text-decoration: none; font-weight: 600; }
+.lema-confrontativo mark.m0 { background: var(--hl1); box-shadow: inset 0 -2px 0 var(--lv1); text-decoration: none; }
 .tw-foot { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); margin-top: 9px; font-variant-numeric: tabular-nums; }
 .tw-foot a { color: var(--ink-2); text-decoration: none; margin-left: auto; font-weight: 500; }
 .tw-foot a:hover { text-decoration: underline; }
@@ -295,9 +299,11 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       </button>
     </div>
     <div class="escala" aria-hidden="true"><span class="s0" id="e-0"></span><span class="s1" id="e-1"></span><span class="s2" id="e-2"></span></div>
-    <label class="lema"><input type="checkbox" id="lema">
-      <span>Contar el lema «Viva la libertad, carajo» como procaz <small id="lema-n"></small></span>
-    </label>
+    <fieldset class="lema">
+      <legend>Contar el lema «Viva la libertad, carajo» <small id="lema-n"></small> como:</legend>
+      <label><input type="checkbox" id="lema-procaz" data-lema="procaz"><i class="sw sw2" aria-hidden="true"></i>procaz</label>
+      <label><input type="checkbox" id="lema-confrontativo" data-lema="confrontativo"><i class="sw sw1" aria-hidden="true"></i>confrontativo</label>
+    </fieldset>
   </div>
 
   <section class="chart-sec" aria-labelledby="chart-h">
@@ -381,7 +387,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       <h3>El método</h3>
       <p>La clasificación es automática y se basa en dos listas de palabras armadas a partir del vocabulario real de los tweets. Se aplica igual a tweets, respuestas y retweets. Si una publicación contiene alguna palabra de la lista procaz, va al nivel procaz. Si no, pero contiene alguna de la lista confrontativa, va al confrontativo. Si no contiene ninguna, va al convencional. En cada publicación se resaltan las palabras que decidieron su nivel.</p>
       <p>La lista confrontativa incluye también las expresiones con las que Milei celebra haber disciplinado o humillado a un adversario: «TREMENDA DOMADA» y las demás formas de «domar», «se cayeron de traste», «paliza», «humillar» y «KO». No cuentan los usos económicos de «domar», como «domar la inflación». También es confrontativa la sigla NOLSALP: «No odiamos lo suficiente a los periodistas».</p>
-      <p>El lema «Viva la libertad, carajo» aparece <span id="lema-n2">en muchos</span> tweets. Por defecto no cuenta como procaz, porque funciona como consigna fija; el interruptor de arriba lo suma. Los demás usos de «carajo» sí cuentan.</p>
+      <p>El lema «Viva la libertad, carajo» aparece <span id="lema-n2">en muchos</span> tweets. Por defecto no cuenta, porque funciona como consigna fija; las casillas de arriba permiten contarlo como procaz o como confrontativo (una u otra). Los demás usos de «carajo» sí cuentan.</p>
       <h3>Límites</h3>
       <p>Las listas detectan palabras, no intenciones. Se escapan agresiones sin insultos explícitos («tirate de un piso 50»), ironías y burlas sutiles. En una revisión manual de muestras al azar, casi todos los tweets marcados como confrontativos o procaces estaban bien clasificados. Entre los convencionales con más de 40 caracteres, entre el 5 % y el 10 % tenía un tono confrontativo que las listas no captaron.</p>
       <p><span id="n-vacios">335</span> tweets y respuestas no tienen texto (solo imagen o video) y aparecen solo en «Todos».</p>
@@ -476,7 +482,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   const TIPOS = [['tweet', 'tweets'], ['respuesta', 'respuestas'], ['retweet', 'retweets']];
 
   // ---------- estado ----------
-  const S = { mode: 'todos', lema: false, q: '', from: MK0, to: MK1, tipos: new Set(['tweet', 'respuesta', 'retweet']), sort: 'new', term: null, n: 50 };
+  const S = { mode: 'todos', lema: '', q: '', from: MK0, to: MK1, tipos: new Set(['tweet', 'respuesta', 'retweet']), sort: 'new', term: null, n: 50 };
   const tiposLabel = () => TIPOS.filter(([k]) => S.tipos.has(k)).map(([, p]) => p).join(' + ');
   const sustantivo = () => S.tipos.size === 1 ? TIPOS.find(([k]) => S.tipos.has(k))[1] : 'publicaciones';
   const PRESIDENTE = 2023 * 12 + 11; // asumió el 10 de diciembre de 2023
@@ -484,8 +490,10 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   const rangoLabel = () => S.from === S.to ? mesLabel(S.from) : `${mesLabel(S.from)} – ${mesLabel(S.to)}`;
   let qTokens = [];
   let lista = [], monthly = [];
-  const level = (t) => t.empty ? -1 : (t.hasP || (S.lema && t.hasL)) ? 2 : t.hasC ? 1 : 0;
-  const termLevel = (k) => (k === 0 ? 2 : k);
+  // el lema «Viva la libertad, carajo» no cuenta, o cuenta como procaz o como confrontativo (S.lema)
+  const nivelLema = () => S.lema === 'procaz' ? 2 : S.lema === 'confrontativo' ? 1 : 0;
+  const level = (t) => t.empty ? -1 : Math.max(t.hasP ? 2 : t.hasC ? 1 : 0, t.hasL ? nivelLema() : 0);
+  const termLevel = (k) => (k === 0 ? nivelLema() : k);
 
   function pasa(t) { // todos los filtros salvo tipo, período y nivel
     if (S.term) {
@@ -547,7 +555,8 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       const m = b.dataset.mode === 'todos' ? 'todos' : +b.dataset.mode;
       b.setAttribute('aria-pressed', String(m === S.mode));
     });
-    $('#app').classList.toggle('lema-on', S.lema);
+    $('#app').classList.toggle('lema-procaz', S.lema === 'procaz');
+    $('#app').classList.toggle('lema-confrontativo', S.lema === 'confrontativo');
   }
 
   // ---------- gráfico ----------
@@ -881,7 +890,12 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     try { history.replaceState(null, '', '#' + (S.mode === 'todos' ? 'todos' : HASH[S.mode])); } catch (e) {}
     update();
   }));
-  $('#lema').addEventListener('change', (e) => { S.lema = e.target.checked; update(); renderLexico(); });
+  // casillas excluyentes: marcar una desmarca la otra; desmarcar la activa deja el lema sin contar
+  for (const c of document.querySelectorAll('.lema input')) c.addEventListener('change', (e) => {
+    S.lema = e.target.checked ? e.target.dataset.lema : '';
+    for (const o of document.querySelectorAll('.lema input')) if (o !== e.target) o.checked = false;
+    update(); renderLexico();
+  });
   let tq;
   $('#q').addEventListener('input', (e) => { clearTimeout(tq); tq = setTimeout(() => { S.q = e.target.value; update(); }, 140); });
   $('#sort').addEventListener('change', (e) => { S.sort = e.target.value; update(); });
