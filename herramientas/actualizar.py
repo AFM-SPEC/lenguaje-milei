@@ -130,6 +130,29 @@ def fila_retweet(x, ts_rt):
             'likes_original': x.get('likes', ''), 'respuestas_original': x.get('replies', ''), 'fecha_aproximada': 'si'}
 
 
+# ---------- conjunto abierto de milei.nulo.lol ----------
+NULO_CSV = 'https://milei.nulo.lol/api/datasets/retweets.csv'  # github.com/catdevnull/milei-twitter
+
+def fila_nulo(r):
+    """Fila del CSV de milei.nulo.lol (retweetAt, postedAt, posterId, posterHandle, postId, textPreview) → formato del CSV."""
+    txt = (r['textPreview'] or '').strip()
+    lead = re.match(r'^(?:@\w+\s+)+', txt)  # las respuestas traen las menciones al principio
+    resp = ''
+    if lead and txt[lead.end():].strip():
+        resp = re.match(r'@(\w+)', txt).group(1)
+        txt = txt[lead.end():].strip()
+    autor = r['posterHandle'] or ''
+    z = lambda f: f[:19] + '.000Z' if f else ''
+    return {'id_retweet': '', 'fecha_retweet': z(r['retweetAt']), 'autor_original': autor, 'nombre_autor': '',
+            'id_original': r['postId'], 'fecha_original': z(r['postedAt']), 'texto': txt,
+            'link_original': f"https://x.com/{autor}/status/{r['postId']}", 'respuesta_a': resp, 'cita_a': '',
+            'likes_original': '', 'respuestas_original': '', 'fecha_aproximada': ''}
+
+def leer_nulo(ruta):
+    return [r for r in csv.DictReader(open(ruta, encoding='utf-8'))
+            if re.match(r'\d{4}-\d\d-\d\dT', r.get('retweetAt') or '') and (r.get('postId') or '').isdigit()]
+
+
 # ---------- lectura y escritura ----------
 def leer_csv(path):
     with open(path, encoding='utf-8-sig', newline='') as f:
@@ -261,6 +284,22 @@ def main(probar, publicar):
     desde = iso(ini_rt - 3 * DIA)
     ya = {r['id_original'] for r in filas_rt if r['fecha_retweet'] >= desde}
     nuevos_rt = [r for i, r in rts.items() if i not in ya]
+    # los lunes, además, lo que registró milei.nulo.lol en los últimos 10 días (hora exacta)
+    if time.gmtime(ahora - OFF).tm_wday == 0:
+        tmp = os.path.join(RAIZ, '.git', 'nulo_retweets.csv')
+        r = subprocess.run(['curl', '-s', '-m', '600', '-A', 'Mozilla/5.0', '-o', tmp, '-w', '%{http_code}', NULO_CSV],
+                           capture_output=True, text=True)
+        if r.stdout == '200':
+            todos_ids = {f['id_original'] for f in filas_rt} | {f['id_original'] for f in nuevos_rt}
+            desde_n = iso(ahora - 10 * DIA)
+            extra = []
+            for f in map(fila_nulo, leer_nulo(tmp)):
+                if f['fecha_retweet'] >= desde_n and f['id_original'] not in todos_ids:
+                    todos_ids.add(f['id_original']); extra.append(f)
+            nuevos_rt += extra
+            log(f'milei.nulo.lol: {len(extra)} retweets que la búsqueda no trajo')
+        else:
+            log(f'aviso: no se pudo bajar el CSV de milei.nulo.lol (HTTP {r.stdout})')
     log(f'nuevos: {len(nuevos_p)} tweets y respuestas, {len(nuevos_rt)} retweets')
     if probar:
         for i in nuevos_p[:10]:
