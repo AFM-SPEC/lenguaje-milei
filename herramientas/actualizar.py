@@ -154,6 +154,8 @@ def git(*a, check=True):
 
 
 def main(probar, publicar):
+    # que la Mac no se duerma mientras corre (la tarea diaria lo lanza sin caffeinate)
+    subprocess.Popen(['/usr/bin/caffeinate', '-i', '-w', str(os.getpid())])
     lock = open(os.path.join(RAIZ, '.git', 'actualizar.lock'), 'w')
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
