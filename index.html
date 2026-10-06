@@ -101,22 +101,29 @@ h1 {
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
   padding: 12px 14px 13px; cursor: pointer; min-width: 0;
-  transition: border-color .15s, background-color .15s;
+  transition: border-color .15s, box-shadow .15s;
 }
 .modo:hover { border-color: var(--line-2); }
-.modo[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--crema); }
-.modo[aria-pressed="true"] .m-def, .modo[aria-pressed="true"] .m-pct { color: rgba(255, 248, 220, .72); }
-.m-lab { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14px; }
+/* los niveles se combinan como los tipos de «Incluir»: borde oscuro y casilla tildada;
+   «Todos» queda a medias (mixed) si hay algunos niveles elegidos y no todos */
+.modo[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.modo[aria-pressed="false"] .m-num, .modo[aria-pressed="false"] .m-lab { color: var(--muted); }
+.modo[aria-pressed="false"] .sw { opacity: .45; }
+.m-lab { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14px; align-self: stretch; }
+.modo .chk { margin-left: auto; }
+.modo[aria-pressed="true"] .chk, .modo[aria-pressed="mixed"] .chk { background: var(--ink); border-color: var(--ink); }
+.modo[aria-pressed="true"] .chk::after { content: ""; width: 7px; height: 4px; border: 2px solid var(--crema); border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+.modo[aria-pressed="mixed"] .chk::after { content: ""; width: 7px; height: 2px; background: var(--crema); }
 .m-num { font-family: var(--f-display); font-weight: 400; font-size: 28px; line-height: 1.15; letter-spacing: -.015em; font-variant-numeric: tabular-nums lining-nums; }
 .m-pct { font-size: 13px; color: var(--muted); font-weight: 500; margin-left: 6px; font-variant-numeric: tabular-nums; }
 .m-def { font-size: 12.5px; line-height: 1.35; color: var(--muted); }
 .sw { width: 10px; height: 10px; border-radius: 1px; display: inline-block; flex: none; }
 .sw0 { background: var(--lv0); } .sw1 { background: var(--lv1); } .sw2 { background: var(--lv2); }
-.modo[aria-pressed="true"] .sw { box-shadow: 0 0 0 1.5px var(--crema); }
 
 .escala { display: flex; gap: 2px; height: 6px; margin: 10px 0 12px; border-radius: 1px; overflow: hidden; }
-.escala span { min-width: 0; transition: flex-grow .3s ease; }
+.escala span { min-width: 0; transition: flex-grow .3s ease, opacity .15s; }
 .escala .s0 { background: var(--lv0); } .escala .s1 { background: var(--lv1); } .escala .s2 { background: var(--lv2); }
+.escala .off { opacity: .25; }
 
 .lema { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; margin: 0; padding: 0; border: 0; font-size: 14px; color: var(--ink-2); }
 .lema legend { float: left; padding: 0; margin-right: 2px; }
@@ -143,6 +150,7 @@ h2 {
 #chart .yl { text-anchor: end; }
 #chart .xl { text-anchor: middle; }
 #chart .tick { stroke: var(--line-2); }
+#chart .vacio { fill: var(--muted); font: 500 13px var(--f-ui); text-anchor: middle; }
 #chart .b0 { fill: var(--lv0); } #chart .b1 { fill: var(--lv1); } #chart .b2 { fill: var(--lv2); }
 #chart .sel { fill: var(--line); }
 #chart .hit { fill: transparent; cursor: pointer; }
@@ -266,7 +274,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   <div class="portada">
     <div class="eyebrow"><span>@JMilei en X</span><span id="rango">oct 2015 – sep 2026</span><span>Tweets, respuestas y retweets</span></div>
     <h1>El lenguaje de Milei</h1>
-    <p class="lede" id="lede">Todos los tweets de Javier Milei, clasificados en tres niveles de lenguaje: convencional, confrontativo y procaz. Elegí un nivel, buscá una palabra o tocá un mes del gráfico.</p>
+    <p class="lede" id="lede">Todos los tweets de Javier Milei, clasificados en tres niveles de lenguaje: convencional, confrontativo y procaz. Combiná los niveles, buscá una palabra o tocá un mes del gráfico.</p>
 
     <div class="tipos" role="group" aria-labelledby="tipos-lab">
       <span class="tipos-lab" id="tipos-lab">Incluir</span>
@@ -276,24 +284,24 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       <span class="tipos-nota" id="tipos-nota" aria-live="polite"></span>
     </div>
 
-    <div class="modos" role="group" aria-label="Nivel de lenguaje">
+    <div class="modos" role="group" aria-label="Nivel de lenguaje (se pueden combinar)">
       <button class="modo" data-mode="todos" aria-pressed="true">
-        <span class="m-lab">Todos</span>
+        <span class="m-lab">Todos<span class="chk" aria-hidden="true"></span></span>
         <span class="m-num num" id="n-todos">–</span>
         <span class="m-def">Incluye los que no tienen texto</span>
       </button>
-      <button class="modo" data-mode="0" aria-pressed="false">
-        <span class="m-lab"><i class="sw sw0"></i>Convencional</span>
+      <button class="modo" data-mode="0" aria-pressed="true">
+        <span class="m-lab"><i class="sw sw0"></i>Convencional<span class="chk" aria-hidden="true"></span></span>
         <span><span class="m-num num" id="n-0">–</span><span class="m-pct" id="p-0"></span></span>
         <span class="m-def">Respeta la cortesía y el decoro habituales</span>
       </button>
-      <button class="modo" data-mode="1" aria-pressed="false">
-        <span class="m-lab"><i class="sw sw1"></i>Confrontativo</span>
+      <button class="modo" data-mode="1" aria-pressed="true">
+        <span class="m-lab"><i class="sw sw1"></i>Confrontativo<span class="chk" aria-hidden="true"></span></span>
         <span><span class="m-num num" id="n-1">–</span><span class="m-pct" id="p-1"></span></span>
         <span class="m-def">Expresiones duras, provocadoras o descalificadoras</span>
       </button>
-      <button class="modo" data-mode="2" aria-pressed="false">
-        <span class="m-lab"><i class="sw sw2"></i>Procaz</span>
+      <button class="modo" data-mode="2" aria-pressed="true">
+        <span class="m-lab"><i class="sw sw2"></i>Procaz<span class="chk" aria-hidden="true"></span></span>
         <span><span class="m-num num" id="n-2">–</span><span class="m-pct" id="p-2"></span></span>
         <span class="m-def">Groserías, vulgaridades, malas palabras</span>
       </button>
@@ -404,9 +412,9 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       <h3>Tipos de publicación</h3>
       <p><b>Tweets:</b> publicaciones propias, incluidas las citas y los hilos (cuando se responde a sí mismo). <b>Respuestas:</b> publicaciones propias que responden a otra cuenta. <b>Retweets:</b> publicaciones de otras cuentas que Milei compartió; la fecha es la del momento en que las retuiteó. Los tres tipos se pueden combinar con los botones de «Incluir».</p>
       <h3>Fuentes</h3>
-      <p><b>Tweets y respuestas:</b> una búsqueda día por día de todo lo publicado por @JMilei entre el 1 de octubre de 2015 y el 30 de septiembre de 2026, hecha a través de FxTwitter (que consulta la búsqueda de X), sumada al archivo de archivopolitico.com y a capturas del Wayback Machine. El archivo original solo guardaba una parte de los tweets de cada mes desde mediados de 2018, y por eso antes aparecían caídas que no eran reales. Los tweets que Milei borró solo están si alguna de esas fuentes los había guardado.</p>
-      <p><b>Retweets:</b> capturas del Wayback Machine, resueltas con el servicio público de tweets incrustados de X. X no permite buscar retweets viejos, así que solo están los que el Wayback archivó: pocos antes de 2020, pocos en 2023 y una cobertura irregular en el resto. En una comparación con el perfil real de septiembre de 2026, el Wayback tenía el 86 % de los retweets. Se usaron dos tipos de captura: la de cada retweet suelto, y la del perfil de Milei, que muestra sus últimos 20 a 40 movimientos. Las capturas del perfil sumaron 2.785 retweets de 2017 a 2023, incluidos algunos de tweets que después se borraron, cuyo texto quedó en la captura. En las capturas desde julio de 2022 X ya no indica cuándo se retuiteó, así que la fecha se estimó por el orden del perfil y aparece con «≈». Los retweets de tweets borrados que solo se conocen por su número no se incluyen.</p>
-      <p>Las cifras de me gusta, retweets y vistas se tomaron el 30 de septiembre de 2026 para casi todas las publicaciones propias; las vistas solo existen desde fines de 2022.</p>
+      <p><b>Tweets y respuestas:</b> una búsqueda día por día de todo lo publicado por @JMilei entre el 1 de octubre de 2015 y el 30 de septiembre de 2026, hecha a través de FxTwitter (que consulta la búsqueda de X), sumada al archivo de archivopolitico.com y a capturas del Wayback Machine. El archivo original solo guardaba una parte de los tweets de cada mes desde mediados de 2018, y por eso antes aparecían caídas que no eran reales. Los tweets que Milei borró solo están si alguna de esas fuentes los había guardado. Desde octubre de 2026 la base se actualiza todos los días con la misma búsqueda.</p>
+      <p><b>Retweets:</b> capturas del Wayback Machine, resueltas con el servicio público de tweets incrustados de X. X no permite buscar retweets viejos, así que solo están los que el Wayback archivó: pocos antes de 2020, pocos en 2023 y una cobertura irregular en el resto. En una comparación con el perfil real de septiembre de 2026, el Wayback tenía el 86 % de los retweets. Se usaron dos tipos de captura: la de cada retweet suelto, y la del perfil de Milei, que muestra sus últimos 20 a 40 movimientos. Las capturas del perfil sumaron 2.785 retweets de 2017 a 2023, incluidos algunos de tweets que después se borraron, cuyo texto quedó en la captura. En las capturas desde julio de 2022 X ya no indica cuándo se retuiteó, así que la fecha se estimó por el orden del perfil y aparece con «≈». Los retweets de tweets borrados que solo se conocen por su número no se incluyen. Desde octubre de 2026 los retweets se suman todos los días con la búsqueda de X, que encuentra los de la última semana; su fecha se estima a la hora y aparece con «≈».</p>
+      <p>Las cifras de me gusta, retweets y vistas de las publicaciones propias se tomaron el 30 de septiembre de 2026 para las anteriores a esa fecha; las posteriores se actualizan durante sus primeros días. Las vistas solo existen desde fines de 2022.</p>
     </div>
   </section>
 </div>
@@ -422,7 +430,6 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   const fmt = new Intl.NumberFormat('es-AR');
   const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
   const LV = ['Convencional', 'Confrontativo', 'Procaz'];
-  const MODOS = { todos: 'todos', convencional: 0, confrontativo: 1, procaz: 2 };
   const HASH = ['convencional', 'confrontativo', 'procaz'];
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
   const OFF = 3 * 3600; // hora de Argentina (UTC−3, sin horario de verano)
@@ -482,8 +489,13 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   const TIPOS = [['tweet', 'tweets'], ['respuesta', 'respuestas'], ['retweet', 'retweets']];
 
   // ---------- estado ----------
-  const S = { mode: 'todos', lema: '', q: '', from: MK0, to: MK1, tipos: new Set(['tweet', 'respuesta', 'retweet']), sort: 'new', term: null, n: 50 };
+  const S = { niveles: new Set([0, 1, 2]), lema: '', q: '', from: MK0, to: MK1, tipos: new Set(['tweet', 'respuesta', 'retweet']), sort: 'new', term: null, n: 50 };
   const tiposLabel = () => TIPOS.filter(([k]) => S.tipos.has(k)).map(([, p]) => p).join(' + ');
+  // niveles combinables (filtros cruzados); con los tres elegidos es «Todos» y entran también los que no tienen texto
+  const todosNiveles = () => S.niveles.size === 3;
+  const nivelElegido = (L) => L < 0 ? todosNiveles() : S.niveles.has(L);
+  const nivelesSel = () => [0, 1, 2].filter((l) => S.niveles.has(l));
+  const nivelesLabel = () => nivelesSel().map((l) => LV[l].toLowerCase()).join(' y ');
   const sustantivo = () => S.tipos.size === 1 ? TIPOS.find(([k]) => S.tipos.has(k))[1] : 'publicaciones';
   const PRESIDENTE = 2023 * 12 + 11; // asumió el 10 de diciembre de 2023
   const rangoActivo = () => S.from !== MK0 || S.to !== MK1;
@@ -520,7 +532,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       for (const t of src) {
         if (!pasa(t)) continue;
         const L = level(t);
-        const tiempo = enTiempo(t), nivelOk = S.mode === 'todos' || S.mode === L;
+        const tiempo = enTiempo(t), nivelOk = nivelElegido(L);
         if (tiempo && nivelOk) porTipo[t.kind]++;
         if (!S.tipos.has(t.kind)) continue;
         monthly[t.mk - MK0][L < 0 ? 3 : L]++;
@@ -550,10 +562,13 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       $('#n-' + l).textContent = fmt.format(counts[l]);
       $('#p-' + l).textContent = tot ? pct(counts[l], tot) + ' %' : '';
       $('#e-' + l).style.flexGrow = counts[l];
+      $('#e-' + l).classList.toggle('off', !S.niveles.has(l));
     }
     document.querySelectorAll('.modo').forEach((b) => {
-      const m = b.dataset.mode === 'todos' ? 'todos' : +b.dataset.mode;
-      b.setAttribute('aria-pressed', String(m === S.mode));
+      const on = b.dataset.mode === 'todos'
+        ? (todosNiveles() ? 'true' : S.niveles.size ? 'mixed' : 'false')
+        : String(S.niveles.has(+b.dataset.mode));
+      b.setAttribute('aria-pressed', on);
     });
     $('#app').classList.toggle('lema-procaz', S.lema === 'procaz');
     $('#app').classList.toggle('lema-confrontativo', S.lema === 'confrontativo');
@@ -579,10 +594,10 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const band = iw / NM;
     const gapX = band > 5 ? 2 : band > 3 ? 1 : 0.5;
     const bw = Math.max(0.8, Math.min(24, band - gapX));
-    const series = S.mode === 'todos' ? [2, 1, 0] : [S.mode];
+    const series = nivelesSel().reverse();
     const tot = monthly.map((m) => series.reduce((s, l) => s + m[l], 0));
     const max = Math.max(1, ...tot);
-    const step = niceStep(max, 3);
+    const step = Math.max(1, niceStep(max, 3)); // son cantidades: sin rayas de 0,5
     const top = Math.ceil(max / step) * step;
     const yv = (v) => mt + ih - (v / top) * ih;
     let s = '';
@@ -615,6 +630,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
         else s += `<rect class="b${l}" x="${x}" y="${yy}" width="${bw}" height="${Math.max(hh, 0.8)}"/>`;
       });
     }
+    if (!series.length) s += `<text class="vacio" x="${ml + iw / 2}" y="${mt + ih / 2}" dy="0.32em">Elegí al menos un nivel de lenguaje</text>`;
     s += `<rect class="hov" id="hov" x="0" y="${mt}" width="${band}" height="${ih}" visibility="hidden"/>`;
     s += `<rect class="drag" id="drag" x="0" y="${mt}" width="0" height="${ih}" visibility="hidden"/>`;
     const svg = $('#chart');
@@ -623,15 +639,15 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     svg.innerHTML = s;
     geo = { ml, mr, band, W };
 
-    $('#legend').innerHTML = S.mode === 'todos'
-      ? [0, 1, 2].map((l) => `<span><i class="sw sw${l}"></i>${LV[l]}</span>`).join('')
+    $('#legend').innerHTML = series.length > 1
+      ? nivelesSel().map((l) => `<span><i class="sw sw${l}"></i>${LV[l]}</span>`).join('')
       : '';
     const filtros = [];
     if (S.term) filtros.push(`con «${S.term}»`);
     if (qTokens.length) filtros.push(`que contienen «${S.q.trim()}»`);
     const tl = tiposLabel();
     $('#chart-sub').textContent = tl.charAt(0).toUpperCase() + tl.slice(1) + ', '
-      + (S.mode === 'todos' ? 'todos los niveles' : `solo lenguaje ${LV[S.mode].toLowerCase()}`)
+      + (todosNiveles() ? 'todos los niveles' : S.niveles.size ? `solo lenguaje ${nivelesLabel()}` : 'ningún nivel elegido')
       + (filtros.length ? ', ' + filtros.join(', ') : '') + '. Tocá un mes o arrastrá sobre el gráfico para elegir un período.'
       + (S.tipos.has('retweet') ? ' Los retweets solo están donde el Wayback Machine los archivó: hay pocos antes de 2020 y en 2023.' : '');
   }
@@ -642,7 +658,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     for (let i = a; i <= b; i++) for (let l = 0; l < 3; l++) m[l] += monthly[i][l];
     const total = m[0] + m[1] + m[2];
     let h = `<b>${a === b ? mesLabel(MK0 + a) : `${mesLabel(MK0 + a)} – ${mesLabel(MK0 + b)}`}</b>`;
-    const rows = S.mode === 'todos' ? [2, 1, 0] : [S.mode];
+    const rows = nivelesSel().reverse();
     for (const l of rows) h += `<div class="row"><span><i class="sw sw${l}"></i>${LV[l]}</span><span class="num">${fmt.format(m[l])}${total ? ` · ${pct(m[l], total)} %` : ''}</span></div>`;
     h += `<div class="row tot"><span>Total con texto</span><span class="num">${fmt.format(total)}</span></div>`;
     const solo = S.from === MK0 + a && S.to === MK0 + a;
@@ -770,7 +786,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   }
   const chip = (w, e) => `<button class="chip" data-term="${esc(w)}" aria-pressed="${S.term === w}"><i class="sw sw${e.l}"></i>${esc(w)} <span class="c">${fmt.format(e.n)}</span></button>`;
   function renderTerms() {
-    const lst = contarTerminos(lista).filter(([, e]) => S.mode === 'todos' || e.l === S.mode);
+    const lst = contarTerminos(lista).filter(([, e]) => S.niveles.has(e.l));
     let top = lst.slice(0, 30);
     if (S.term && !top.some(([w]) => w === S.term)) {
       const f = lst.find(([w]) => w === S.term);
@@ -778,7 +794,8 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     }
     $('#terms').innerHTML = top.length
       ? top.map(([w, e]) => chip(w, e)).join('')
-      : `<p class="vacio-nota">${S.mode === 0 ? 'Los tweets convencionales no tienen palabras marcadas.' : 'No hay palabras marcadas en esta selección.'}</p>`;
+      : `<p class="vacio-nota">${!S.niveles.size ? 'No hay ningún nivel de lenguaje elegido.'
+        : S.niveles.size === 1 && S.niveles.has(0) ? 'Los tweets convencionales no tienen palabras marcadas.' : 'No hay palabras marcadas en esta selección.'}</p>`;
   }
   function renderLexico() {
     const todos = contarTerminos(T.filter((t) => !t.empty));
@@ -792,7 +809,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const w = b.dataset.term;
     S.term = S.term === w ? null : w;
     if (b.closest('.metodo') && S.term) {
-      S.mode = 'todos';
+      S.niveles = new Set([0, 1, 2]);
       update();
       $('.explorar').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
       renderLexico();
@@ -849,7 +866,9 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const ol = $('#lista');
     if (reset) { ol.innerHTML = ''; pintados = 0; }
     if (!lista.length) {
-      ol.innerHTML = '<li class="nada">No hay publicaciones con estos filtros. Probá con otra palabra, sumá otro tipo o quitá algún filtro.</li>';
+      ol.innerHTML = S.niveles.size
+        ? '<li class="nada">No hay publicaciones con estos filtros. Probá con otra palabra, sumá otro tipo o nivel, o quitá algún filtro.</li>'
+        : '<li class="nada">No hay ningún nivel de lenguaje elegido. Marcá al menos uno arriba (convencional, confrontativo o procaz) o «Todos».</li>';
       $('#mas').hidden = true;
       return;
     }
@@ -864,7 +883,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     if (S.q.trim()) add(`«${S.q.trim()}»`, () => { S.q = ''; $('#q').value = ''; });
     if (S.term) add(`palabra: ${S.term}`, () => { S.term = null; });
     if (rangoActivo()) add(rangoLabel(), () => { S.from = MK0; S.to = MK1; syncRango(); });
-    const nivel = S.mode === 'todos' ? '' : ` · ${LV[S.mode].toLowerCase()}`;
+    const nivel = todosNiveles() ? '' : ` · ${S.niveles.size ? nivelesSel().map((l) => LV[l].toLowerCase()).join(' + ') : 'ningún nivel'}`;
     const detalle = S.tipos.size > 1 ? ` <span class="sub">(${tiposLabel()})</span>` : '';
     let h = `<span class="total num">${fmt.format(lista.length)} ${sustantivo()}${nivel}${detalle}</span>`;
     h += act.map((a, i) => `<span class="activo">${esc(a.lab)}<button data-quitar="${i}" aria-label="Quitar filtro ${esc(a.lab)}">×</button></span>`).join('');
@@ -885,9 +904,12 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   }, { rootMargin: '600px' }).observe($('#centinela'));
 
   // ---------- controles ----------
+  // niveles: cada tarjeta se marca y desmarca sola; «Todos» marca los tres o, si ya están, no deja ninguno
+  const hashNiveles = () => todosNiveles() ? 'todos' : S.niveles.size ? nivelesSel().map((l) => HASH[l]).join('+') : 'ninguno';
   document.querySelectorAll('.modo').forEach((b) => b.addEventListener('click', () => {
-    S.mode = b.dataset.mode === 'todos' ? 'todos' : +b.dataset.mode;
-    try { history.replaceState(null, '', '#' + (S.mode === 'todos' ? 'todos' : HASH[S.mode])); } catch (e) {}
+    if (b.dataset.mode === 'todos') S.niveles = todosNiveles() ? new Set() : new Set([0, 1, 2]);
+    else { const l = +b.dataset.mode; if (S.niveles.has(l)) S.niveles.delete(l); else S.niveles.add(l); }
+    try { history.replaceState(null, '', '#' + hashNiveles()); } catch (e) {}
     update();
   }));
   // casillas excluyentes: marcar una desmarca la otra; desmarcar la activa deja el lema sin contar
@@ -968,9 +990,14 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   $('#n-vacios').textContent = fmt.format(T.filter((t) => t.empty).length);
   $('#rango').textContent = `${mesLabel(MK0)} – ${mesLabel(MK1)}`;
   const nTw = T.filter((t) => t.kind === 'tweet').length, nResp = T.length - nTw;
-  $('#lede').innerHTML = `<b>${fmt.format(nTw)} tweets</b>, <b>${fmt.format(nResp)} respuestas</b> y <b>${fmt.format(RT_TOTAL)} retweets</b> de Javier Milei, clasificados en tres niveles de lenguaje: convencional, confrontativo y procaz. Combiná los tipos, elegí un nivel, buscá una palabra o marcá un período en el gráfico.`;
-  const h = (location.hash || '').slice(1);
-  if (h in MODOS) S.mode = MODOS[h];
+  $('#lede').innerHTML = `<b>${fmt.format(nTw)} tweets</b>, <b>${fmt.format(nResp)} respuestas</b> y <b>${fmt.format(RT_TOTAL)} retweets</b> de Javier Milei, clasificados en tres niveles de lenguaje: convencional, confrontativo y procaz. Combiná los tipos y los niveles, buscá una palabra o marcá un período en el gráfico.`;
+  // #todos, #ninguno, #procaz, #confrontativo+procaz…
+  const h = decodeURIComponent((location.hash || '').slice(1)).toLowerCase();
+  if (h === 'ninguno') S.niveles = new Set();
+  else if (h && h !== 'todos') {
+    const ls = h.split(/[+,]/).map((p) => HASH.indexOf(p)).filter((l) => l >= 0);
+    if (ls.length) S.niveles = new Set(ls);
+  }
   update();
   renderLexico();
   }
