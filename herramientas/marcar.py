@@ -13,7 +13,7 @@ import glob, json, os, re, sys, unicodedata
 from collections import Counter
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFRONTATIVO, PROCAZ = 1, 2
+LEMA, CONFRONTATIVO, PROCAZ = 0, 1, 2  # el lema cuenta según las casillas de la página
 
 def sin_tildes(s):
     return ''.join(c for c in unicodedata.normalize('NFD', s.lower()) if unicodedata.category(c) != 'Mn')
@@ -31,6 +31,9 @@ def domar_no_retorico(texto, m):
 
 # --- reglas: (nombre, expresión, nivel, excepción) ------------------------------
 REGLAS = [
+    # «VLLC», abreviatura del lema «Viva la libertad, carajo» (también #VLLC, V.L.L.C.); no dentro de enlaces o @usuarios
+    ('VLLC', re.compile(r'(?i)(?<![A-Za-z0-9])V\.?\s?L\.?\s?L\.?\s?C(?![A-Za-z0-9])'), LEMA,
+     lambda texto, m: texto[max(0, m.start() - 1):m.start()] in ('/', '@', '_')),
     # sigla de «No odiamos lo suficiente a los periodistas»
     ('NOLSALP', re.compile(r'(?i)\bN\.?O\.?L\.?\$?S\.?A\.?(?:L\.?)?P(?![A-Za-z0-9])'), CONFRONTATIVO, None),
     # celebrar que disciplinó o humilló a un adversario
