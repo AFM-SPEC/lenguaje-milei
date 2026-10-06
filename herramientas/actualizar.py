@@ -153,6 +153,58 @@ def git(*a, check=True):
     return r
 
 
+def sumar_retweets_web(datos, nuevos_rt):
+    """Agrega filas de retweets (formato del CSV) a data/retweets-AAAA-N.json y al manifiesto de datos['rt'].
+    Con hora exacta pero sin ID del retweet, la fila lleva un 1 al final para que la página no muestre «≈»."""
+    por_anio = {}
+    for r in sorted(nuevos_rt, key=lambda r: r['fecha_retweet']):
+        ts = ts_de(r['fecha_retweet'])
+        por_anio.setdefault(time.gmtime(ts - OFF).tm_year, []).append(r)
+    for y, grupo in sorted(por_anio.items()):
+        while grupo:
+            partes = [e for e in datos['rt'] if re.search(rf'retweets-{y}-(\d+)\.json$', e['f'])]
+            ult = max(partes, key=lambda e: int(re.search(r'-(\d+)\.json$', e['f']).group(1))) if partes else None
+            if ult and ult['n'] < POR_ARCHIVO:
+                e = ult; d = json.load(open(os.path.join(RAIZ, e['f']), encoding='utf-8'))
+            else:
+                k = int(re.search(r'-(\d+)\.json$', ult['f']).group(1)) + 1 if ult else 1
+                e = {'f': f'data/retweets-{y}-{k}.json', 'n': 0, 'mk0': 0, 'mk1': 0}; datos['rt'].append(e)
+                d = {'a': [], 't': []}
+            lugar, grupo = grupo[:POR_ARCHIVO - e['n']], grupo[POR_ARCHIVO - e['n']:]
+            autores = {a[0]: i for i, a in enumerate(d['a'])}
+            for r in lugar:
+                if r['autor_original'] not in autores:
+                    autores[r['autor_original']] = len(d['a']); d['a'].append([r['autor_original'], r['nombre_autor']])
+                fila = [r['id_retweet'], ts_de(r['fecha_retweet']), autores[r['autor_original']], r['id_original'],
+                        ts_de(r['fecha_original']) if r['fecha_original'] else None, r['texto'], r['respuesta_a'], r['cita_a'],
+                        num(r['likes_original']), num(r['respuestas_original']), tramos(r['texto'])]
+                if not r['id_retweet'] and not r['fecha_aproximada']:
+                    fila.append(1)
+                d['t'].append(fila)
+            d['t'].sort(key=lambda r: r[1])
+            with open(os.path.join(RAIZ, e['f']), 'w', encoding='utf-8') as f:
+                f.write(json.dumps(d, ensure_ascii=False, separators=(',', ':')))
+            e.update(n=len(d['t']), mk0=mk(d['t'][0][1]), mk1=mk(d['t'][-1][1]))
+
+
+def escribir_index_y_readme(s, m, datos, ahora):
+    """Guarda los datos en index.html y actualiza las fechas y cifras de la página y del README."""
+    hoy = fecha_larga(ahora)
+    s = s[:m.start(2)] + json.dumps(datos, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/') + s[m.end(2):]
+    s = re.sub(r'Datos actualizados al [^<]*?\.(?=</p>)', f'Datos actualizados al {hoy}.', s)
+    s = re.sub(r'(entre el 1 de octubre de 2015 y el )\d+ de \w+ de \d{4}', rf'\g<1>{hoy}', s)
+    open(os.path.join(RAIZ, 'index.html'), 'w', encoding='utf-8').write(s)
+    n_tw = sum(1 for r in datos['t'] if not es_respuesta(r[3]))
+    n_rt = sum(e['n'] for e in datos['rt'])
+    rd = os.path.join(RAIZ, 'README.md'); t = open(rd, encoding='utf-8').read()
+    g = time.gmtime(ahora - OFF)
+    t = re.sub(r'entre octubre de 2015 y \w+ de \d{4}', f'entre octubre de 2015 y {MESES[g.tm_mon - 1]} de {g.tm_year}', t)
+    t = re.sub(r'- [\d.]+ tweets y [\d.]+ respuestas', f'- {miles(n_tw)} tweets y {miles(len(datos["t"]) - n_tw)} respuestas', t)
+    t = re.sub(r'- [\d.]+ retweets', f'- {miles(n_rt)} retweets', t)
+    open(rd, 'w', encoding='utf-8').write(t)
+    log(f'escrito: {len(datos["t"])} tweets y respuestas, {n_rt} retweets en la web')
+
+
 def main(probar, publicar):
     # que la Mac no se duerma mientras corre (la tarea diaria lo lanza sin caffeinate)
     subprocess.Popen(['/usr/bin/caffeinate', '-i', '-w', str(os.getpid())])
@@ -233,49 +285,10 @@ def main(probar, publicar):
     datos['t'].sort(key=lambda r: r[1])
     datos['own'] = [{'n': len(datos['t']), 'mk0': mk(datos['t'][0][1]), 'mk1': mk(datos['t'][-1][1])}]
 
-    # ---- web: retweets (data/retweets-AAAA-N.json, hasta POR_ARCHIVO por archivo) ----
-    por_anio = {}
-    for r in sorted(nuevos_rt, key=lambda r: r['fecha_retweet']):
-        ts = ts_de(r['fecha_retweet'])
-        por_anio.setdefault(time.gmtime(ts - OFF).tm_year, []).append(r)
-    for y, grupo in sorted(por_anio.items()):
-        while grupo:
-            partes = [e for e in datos['rt'] if re.search(rf'retweets-{y}-(\d+)\.json$', e['f'])]
-            ult = max(partes, key=lambda e: int(re.search(r'-(\d+)\.json$', e['f']).group(1))) if partes else None
-            if ult and ult['n'] < POR_ARCHIVO:
-                e = ult; d = json.load(open(os.path.join(RAIZ, e['f']), encoding='utf-8'))
-            else:
-                k = int(re.search(r'-(\d+)\.json$', ult['f']).group(1)) + 1 if ult else 1
-                e = {'f': f'data/retweets-{y}-{k}.json', 'n': 0, 'mk0': 0, 'mk1': 0}; datos['rt'].append(e)
-                d = {'a': [], 't': []}
-            lugar, grupo = grupo[:POR_ARCHIVO - e['n']], grupo[POR_ARCHIVO - e['n']:]
-            autores = {a[0]: i for i, a in enumerate(d['a'])}
-            for r in lugar:
-                if r['autor_original'] not in autores:
-                    autores[r['autor_original']] = len(d['a']); d['a'].append([r['autor_original'], r['nombre_autor']])
-                d['t'].append(['', ts_de(r['fecha_retweet']), autores[r['autor_original']], r['id_original'],
-                               ts_de(r['fecha_original']), r['texto'], r['respuesta_a'], r['cita_a'],
-                               num(r['likes_original']), num(r['respuestas_original']), tramos(r['texto'])])
-            d['t'].sort(key=lambda r: r[1])
-            with open(os.path.join(RAIZ, e['f']), 'w', encoding='utf-8') as f:
-                f.write(json.dumps(d, ensure_ascii=False, separators=(',', ':')))
-            e.update(n=len(d['t']), mk0=mk(d['t'][0][1]), mk1=mk(d['t'][-1][1]))
+    sumar_retweets_web(datos, nuevos_rt)
 
-    # ---- textos con la fecha de actualización ----
-    hoy = fecha_larga(ahora)
-    s = s[:m.start(2)] + json.dumps(datos, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/') + s[m.end(2):]
-    s = re.sub(r'Datos actualizados al [^<]*?\.(?=</p>)', f'Datos actualizados al {hoy}.', s)
-    s = re.sub(r'(entre el 1 de octubre de 2015 y el )\d+ de \w+ de \d{4}', rf'\g<1>{hoy}', s)
-    open(os.path.join(RAIZ, 'index.html'), 'w', encoding='utf-8').write(s)
-    n_tw = sum(1 for r in datos['t'] if not es_respuesta(r[3]))
-    n_rt = sum(e['n'] for e in datos['rt'])
-    rd = os.path.join(RAIZ, 'README.md'); t = open(rd, encoding='utf-8').read()
+    escribir_index_y_readme(s, m, datos, ahora)
     g = time.gmtime(ahora - OFF)
-    t = re.sub(r'entre octubre de 2015 y \w+ de \d{4}', f'entre octubre de 2015 y {MESES[g.tm_mon - 1]} de {g.tm_year}', t)
-    t = re.sub(r'- [\d.]+ tweets y [\d.]+ respuestas', f'- {miles(n_tw)} tweets y {miles(len(datos["t"]) - n_tw)} respuestas', t)
-    t = re.sub(r'- [\d.]+ retweets', f'- {miles(n_rt)} retweets', t)
-    open(rd, 'w', encoding='utf-8').write(t)
-    log(f'escrito: {len(datos["t"])} tweets y respuestas, {n_rt} retweets en la web')
 
     if not publicar:
         return

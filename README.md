@@ -3,7 +3,7 @@
 Explorador de los tweets, respuestas y retweets de Javier Milei (@JMilei) entre octubre de 2015 y octubre de 2026, clasificados en tres niveles de lenguaje: convencional, confrontativo y procaz.
 
 - 23.098 tweets y 16.532 respuestas, incluidos en `index.html`.
-- 200.097 retweets en `data/`, un archivo por año (o parte de año), que la página carga al abrirse.
+- 229.310 retweets en `data/`, un archivo por año (o parte de año), que la página carga al abrirse.
 
 Se actualiza todos los días con lo nuevo. Página: https://afm-spec.github.io/lenguaje-milei/
 
@@ -19,12 +19,13 @@ La clasificación es automática, con listas de palabras armadas a partir del vo
 ## Fuentes y cobertura
 
 - Tweets y respuestas: búsqueda día por día a través de FxTwitter, archivopolitico.com y capturas del Wayback Machine. Están completos.
-- Retweets: capturas del Wayback Machine (de cada retweet y del perfil), resueltas con el servicio público de tweets incrustados de X, y desde octubre de 2026 la búsqueda de X, que encuentra los de la última semana.
+- Retweets: capturas del Wayback Machine (de cada retweet y del perfil), resueltas con el servicio público de tweets incrustados de X, el conjunto abierto de [milei.nulo.lol](https://milei.nulo.lol) (retweets con hora exacta desde febrero de 2024) y, desde octubre de 2026, la búsqueda de X, que encuentra los de la última semana.
 - El perfil informaba 397.981 publicaciones el 6 de octubre de 2026. La diferencia son retweets viejos (sobre todo de 2015 a 2019, de 2023 y de parte de 2022) que X no deja buscar y ninguna fuente gratuita conserva.
 
 ## Herramientas
 
 - `herramientas/actualizar.py`: suma los tweets, respuestas y retweets nuevos, los clasifica, actualiza los CSV, `index.html` y `data/`, y publica (commit + push). `--sin-push` para no publicar, `--probar` para solo ver qué encontraría.
+- `herramientas/importar_retweets.py`: suma retweets de un conjunto externo (el CSV de milei.nulo.lol) sin duplicar.
 - `herramientas/clasificar.py`: las listas de palabras y la función que marca cada texto.
 - `herramientas/marcar.py`: reglas agregadas después (NOLSALP, «domar», VLLC…); aplica las reglas nuevas a todo lo publicado sin rehacer la clasificación.
 
