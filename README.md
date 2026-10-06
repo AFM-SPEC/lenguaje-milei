@@ -1,9 +1,9 @@
 # El lenguaje de Milei
 
-Explorador de los tweets, respuestas y retweets de Javier Milei (@JMilei) entre octubre de 2015 y septiembre de 2026, clasificados en tres niveles de lenguaje: convencional, confrontativo y procaz.
+Explorador de los tweets, respuestas y retweets de Javier Milei (@JMilei) entre octubre de 2015 y octubre de 2026, clasificados en tres niveles de lenguaje: convencional, confrontativo y procaz.
 
-- 23.031 tweets y 16.531 respuestas, incluidos en `index.html`.
-- 198.731 retweets en `data/`, un archivo por año (o parte de año), que la página carga al abrirse.
+- 23.098 tweets y 16.532 respuestas, incluidos en `index.html`.
+- 200.097 retweets en `data/`, un archivo por año (o parte de año), que la página carga al abrirse.
 
 La clasificación es automática, con listas de palabras armadas a partir del vocabulario de los tweets. La sección «Cómo se clasificó» de la página explica el método, sus límites y las fuentes.
 
