@@ -157,9 +157,9 @@ table.por-nivel { margin-top: 14px; width: 100%; min-width: 640px; font-size: 13
 }
 .nota { font-size: 13px; line-height: 1.45; color: var(--muted); margin: 8px 0 0; max-width: 90ch; }
 .metricas { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
-.metrica { font-size: 12.5px; background: none; border: 1px solid var(--line-2); border-radius: var(--r); padding: 4px 10px; cursor: pointer; color: var(--ink-2); }
-.metrica:hover { border-color: var(--ink-2); }
-.metrica[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--crema); }
+.metrica, .clase, .por { font-size: 12.5px; background: none; border: 1px solid var(--line-2); border-radius: var(--r); padding: 4px 10px; cursor: pointer; color: var(--ink-2); }
+.metrica:hover, .clase:hover, .por:hover { border-color: var(--ink-2); }
+.metrica[aria-pressed="true"], .clase[aria-pressed="true"], .por[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--crema); }
 
 /* ---------- con quién interactúa ---------- */
 .interaccion { margin-top: 34px; }
@@ -169,7 +169,7 @@ table.por-nivel { margin-top: 14px; width: 100%; min-width: 640px; font-size: 13
 .inter[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); }
 .inter[aria-pressed="true"] .chk { background: var(--ink); border-color: var(--ink); }
 .inter[aria-pressed="true"] .chk::after { content: ""; width: 7px; height: 4px; border: 2px solid var(--crema); border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
-table.por-cuenta { width: 100%; min-width: 760px; font-size: 13.5px; margin-top: 6px; }
+table.por-cuenta { width: 100%; min-width: 860px; font-size: 13.5px; margin-top: 6px; }
 .por-cuenta th:nth-child(2), .por-cuenta .cta { text-align: left; }
 .por-cuenta .rk { color: var(--muted); width: 2.5em; text-align: left; }
 .por-cuenta tr.sel td { background: rgba(11, 29, 58, .05); }
@@ -191,6 +191,16 @@ table.por-cuenta { width: 100%; min-width: 760px; font-size: 13.5px; margin-top:
   .por-cuenta .cta::before { content: none; }
   .por-cuenta .barra { display: none; }
 }
+
+.clases { margin-top: 0; }
+.clase:disabled { opacity: .45; cursor: default; }
+.bots-res { font-size: 14px; color: var(--ink-2); margin: 4px 0 6px; max-width: 90ch; }
+.bots-res b { color: var(--ink); font-weight: 600; }
+.sen { display: inline-block; font-size: 11.5px; font-weight: 600; letter-spacing: .02em; padding: 2px 6px; border-radius: var(--r); white-space: nowrap; cursor: help; }
+.sen-bot { background: var(--hl2); color: var(--lv2); box-shadow: inset 0 0 0 1px rgba(155, 44, 34, .35); }
+.sen-susp { background: rgba(11, 29, 58, .07); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line-2); }
+.sen-n { color: var(--muted); cursor: help; }
+.sen-nd { color: var(--muted); font-size: 12px; }
 
 /* ---------- gráfico ---------- */
 .chart-sec { margin-top: 34px; }
@@ -401,12 +411,19 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
           <button type="button" class="inter" data-inter="cita" aria-pressed="true"><span class="chk" aria-hidden="true"></span>Citas</button>
           <button type="button" class="inter" data-inter="menc" aria-pressed="true"><span class="chk" aria-hidden="true"></span>Menciones</button>
         </div>
+        <div class="metricas clases" role="group" aria-label="Qué cuentas mostrar">
+          <button type="button" class="clase" data-clase="todas" aria-pressed="true">Todas las cuentas</button>
+          <button type="button" class="clase" data-clase="bot" aria-pressed="false">Posibles bots</button>
+          <button type="button" class="clase" data-clase="susp" aria-pressed="false">Suspendidas o no encontradas</button>
+        </div>
         <div class="sub" id="inter-sub"></div>
       </div>
     </div>
+    <p class="bots-res" id="inter-bots" aria-live="polite"></p>
     <div class="tabla-scroll"><table class="por-cuenta" id="inter-tabla"></table></div>
     <button type="button" class="mas-chico" id="inter-mas" hidden>Ver 20 cuentas más</button>
     <p class="nota">Retuiteos: cuentas cuyos tweets compartió. Respuestas, citas y menciones: a quién respondió, a quién citó y a quién nombró con @ en sus propios tweets y respuestas (las menciones dentro de un retweet son del autor original y no cuentan). «Publicaciones» cuenta cada publicación una vez aunque combine varias formas. La barra de lenguaje muestra cuántas de esas publicaciones son convencionales, confrontativas o procaces. Faltan muchos retweets de 2015 a 2019 y de julio de 2022 a enero de 2024 (ver «Cobertura»).</p>
+    <p class="nota"><b>Posibles bots.</b> No hay forma de saber con certeza si una cuenta es automatizada; se marca como «posible bot» la que reúne 3 o más de estas 6 señales, tomadas de su perfil público (vía FxTwitter): nombre de usuario terminado en 4 o más cifras, como los que X genera solo; menos de 50 seguidores; menos de 6 meses de antigüedad cuando Milei interactuó con ella por primera vez; más de 100 publicaciones por día en promedio; sin foto de perfil, o sin descripción ni portada; sigue a más de 1.000 cuentas y tiene menos de un décimo de seguidores. Las cuentas verificadas como gobierno u organización no se marcan. Pasá el cursor sobre la etiqueta para ver qué señales tiene cada una. «Suspendida» es lo que informa X; «no encontrada», que no apareció en dos consultas en días distintos (borrada o con otro nombre). Los perfiles son los de octubre de 2026, no los del momento de la interacción, y se revisan de a poco, empezando por las cuentas con más interacciones.</p>
   </section>
 
   <section class="chart-sec" aria-labelledby="chart-h">
@@ -429,8 +446,13 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       <div class="tip" id="tip" hidden></div>
     </div>
     <details class="tabla">
-      <summary id="tabla-sum">Ver la tabla por año</summary>
+      <summary id="tabla-sum">Ver la tabla</summary>
+      <div class="metricas" role="group" aria-label="Períodos de la tabla">
+        <button type="button" class="por" data-por="anio" aria-pressed="true">Por año</button>
+        <button type="button" class="por" data-por="mes" aria-pressed="false">Por mes</button>
+      </div>
       <div class="tabla-scroll"><table id="tabla"></table></div>
+      <p class="nota">El promedio por día usa los días reales de cada período: el primero cuenta desde el 23 de octubre de 2015 y el último, hasta la fecha de actualización.</p>
     </details>
   </section>
 
@@ -590,6 +612,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   const EPOCH = 1288834974657;
   const oidTexto = (o) => typeof o === 'string' ? o : ((BigInt(o.ms - EPOCH) << 22n) | BigInt(o.m * 4096 + o.s)).toString();
   let R = null; // retweets: se descargan por año apenas se muestra la página
+  let RMAX = 0; // fecha del retweet más reciente
   const retweetDe = ([id, ts, ai, oid, ots, texto, rp, q, fav, cc, sp, exacta], autores, hay) => {
     const [autor, nombre] = autores[ai];
     return preparar({
@@ -605,7 +628,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
 
   // ---------- estado ----------
   const S = { niveles: new Set([0, 1, 2]), lema: '', q: '', from: MK0, to: MK1, tipos: new Set(['tweet', 'respuesta', 'retweet']), sort: 'new', term: null, n: 50, metrica: 'n',
-    cuenta: null, inter: new Set(['rt', 'resp', 'cita', 'menc']), nCuentas: 20 };
+    cuenta: null, inter: new Set(['rt', 'resp', 'cita', 'menc']), nCuentas: 20, clase: 'todas', tablaPor: 'anio' };
   const tiposLabel = () => TIPOS.filter(([k]) => S.tipos.has(k)).map(([, p]) => p).join(' + ');
   // niveles combinables (filtros cruzados); con los tres elegidos es «Todos» y entran también los que no tienen texto
   const todosNiveles = () => S.niveles.size === 3;
@@ -649,6 +672,44 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   }
   const conCuenta = (t) => interacciones(t).some(([k, , tipo]) => k === S.cuenta && S.inter.has(tipo));
   let ranking = null;
+
+  // ---------- señales de automatización (data/cuentas.json, perfiles públicos vía FxTwitter) ----------
+  // fila: [usuario, alta, seguidores, seguidos, publicaciones, me gusta, foto por defecto, largo de la descripción, portada, verificación, chequeo, estado]
+  const SENALES = [
+    ['nombre', 'nombre de usuario terminado en 4 o más cifras, como los que X genera solo'],
+    ['pocos', 'menos de 50 seguidores'],
+    ['nueva', 'tenía menos de 6 meses cuando Milei interactuó con ella por primera vez'],
+    ['intensa', 'más de 100 publicaciones por día en promedio desde que se creó'],
+    ['vacia', 'sin foto de perfil, o sin descripción ni portada'],
+    ['desbalance', 'sigue a más de 1.000 cuentas y tiene menos de un décimo de seguidores'],
+  ];
+  const UMBRAL_BOT = 3;
+  let CLASE = null; // cuenta → { s: [señales], c: 'bot' | 'susp' | 'noenc' | 'ok' | 'sindato' }
+  function clasificarCuentas(cuentas) {
+    const primera = new Map();
+    for (const src of [T, R]) for (const t of src) for (const [k] of interacciones(t)) {
+      const p = primera.get(k); if (p === undefined || t.ts < p) primera.set(k, t.ts);
+    }
+    CLASE = new Map();
+    for (const [k, f] of Object.entries(cuentas)) {
+      const [sn, alta, seg, sig, pubs, , foto, desc, portada, verif, chequeo, estado] = f;
+      if (estado === 'suspendida') { CLASE.set(k, { s: [], c: 'susp' }); continue; }
+      if (estado === 'no encontrada') { CLASE.set(k, { s: [], c: 'noenc' }); continue; }
+      if (alta == null) { CLASE.set(k, { s: [], c: 'sindato' }); continue; }
+      const s = [];
+      if (/\d{4,}$/.test(sn)) s.push('nombre');
+      if (seg < 50) s.push('pocos');
+      if (primera.has(k) && primera.get(k) - alta < 180 * 86400) s.push('nueva');
+      if (pubs / Math.max(1, (chequeo - alta) / 86400) > 100) s.push('intensa');
+      if (foto || (!desc && !portada)) s.push('vacia');
+      if (sig >= 1000 && seg < sig / 10) s.push('desbalance');
+      const org = verif === 'government' || verif === 'business';
+      CLASE.set(k, { s, c: !org && s.length >= UMBRAL_BOT ? 'bot' : 'ok' });
+    }
+  }
+  const claseDe = (k) => (CLASE && CLASE.get(k)) || null;
+  const enClase = (k) => { const c = claseDe(k); return c && (S.clase === 'bot' ? c.c === 'bot' : c.c === 'susp' || c.c === 'noenc'); };
+  const conClase = (t) => interacciones(t).some(([k, , tipo]) => S.inter.has(tipo) && enClase(k));
 
   function pasa(t) { // todos los filtros salvo tipo, período, nivel y cuenta
     if (S.term) {
@@ -694,6 +755,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
           }
         }
         if (S.cuenta && !conCuenta(t)) continue;
+        if (S.clase !== 'todas' && !conClase(t)) continue;
         if (tiempo && nivelOk) porTipo[t.kind]++;
         if (!S.tipos.has(t.kind)) continue;
         const li = L < 0 ? 3 : L, propio = t.kind !== 'retweet';
@@ -747,7 +809,10 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   // ---------- con quién interactúa ----------
   function renderInteracciones() {
     document.querySelectorAll('.inter').forEach((b) => b.setAttribute('aria-pressed', String(S.inter.has(b.dataset.inter))));
-    const filas = [...ranking.values()].sort((a, b) => b.tot - a.tot || a.h.localeCompare(b.h));
+    document.querySelectorAll('.clase').forEach((b) => { b.setAttribute('aria-pressed', String(b.dataset.clase === S.clase)); b.disabled = !CLASE && b.dataset.clase !== 'todas'; });
+    const todas = [...ranking.values()];
+    renderBots(todas);
+    const filas = (S.clase === 'todas' ? todas : todas.filter((e) => enClase(e.h.toLowerCase()))).sort((a, b) => b.tot - a.tot || a.h.localeCompare(b.h));
     const top = filas.slice(0, S.nCuentas);
     const max = Math.max(1, ...top.map((e) => e.tot));
     const filtros = [];
@@ -757,7 +822,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     if (qTokens.length) filtros.push(`que contienen «${S.q.trim()}»`);
     $('#inter-sub').textContent = !S.inter.size ? 'Elegí al menos una forma de interacción.'
       : `${fmt.format(filas.length)} cuentas en ${tiposLabel()}` + (filtros.length ? ', ' + filtros.join(', ') : '') + '. Tocá una para ver sus publicaciones.';
-    const COLS = ['Publicaciones', ...INTER.map(([, l]) => l), 'Lenguaje'];
+    const COLS = ['Publicaciones', ...INTER.map(([, l]) => l), 'Lenguaje', 'Señales'];
     let h = `<thead><tr><th>#</th><th>Cuenta</th>${COLS.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
     top.forEach((e, i) => {
       const k = e.h.toLowerCase(), nombre = NOMBRES.get(k), sel = S.cuenta === k;
@@ -768,11 +833,38 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
         + `<td class="cta"><button type="button" class="cuenta" data-cuenta="${esc(k)}" aria-pressed="${sel}">@${esc(e.h)}</button>${nombre ? `<span class="nom">${esc(nombre)}</span>` : ''}</td>`
         + `<td data-label="Publicaciones" class="con-barra"><span><i class="barra" style="width:${Math.max(2, e.tot / max * 64)}px"></i>${fmt.format(e.tot)}</span></td>`
         + INTER.map(([t, l], j) => `<td data-label="${l}"><span>${S.inter.has(t) ? (e.n[j] ? fmt.format(e.n[j]) : '–') : ''}</span></td>`).join('')
-        + `<td data-label="Lenguaje"><span class="mezcla" title="${titulo}">${mezcla}</span></td></tr>`;
+        + `<td data-label="Lenguaje"><span class="mezcla" title="${titulo}">${mezcla}</span></td>`
+        + `<td data-label="Señales">${senalCelda(k)}</td></tr>`;
     });
     $('#inter-tabla').innerHTML = top.length ? h + '</tbody>' : '';
     $('#inter-mas').hidden = filas.length <= S.nCuentas;
     $('#inter-mas').textContent = `Ver ${Math.min(20, filas.length - S.nCuentas)} cuentas más`;
+  }
+
+  function senalCelda(k) {
+    const c = claseDe(k);
+    if (!c) return `<span class="sen-nd">${CLASE ? 'sin revisar' : '…'}</span>`;
+    if (c.c === 'susp') return '<span class="sen sen-susp" title="X informa que la cuenta está suspendida">Suspendida</span>';
+    if (c.c === 'noenc') return '<span class="sen sen-susp" title="No se encontró en dos días distintos: borrada o con otro nombre">No encontrada</span>';
+    if (c.c === 'sindato') return '<span class="sen-nd">sin dato</span>';
+    const tit = c.s.length ? c.s.map((x) => SENALES.find(([n]) => n === x)[1]).join('; ') : 'ninguna señal';
+    return c.c === 'bot' ? `<span class="sen sen-bot" title="${esc(tit)}">Posible bot · ${c.s.length}</span>`
+      : `<span class="sen-n" title="${esc(tit)}">${c.s.length ? c.s.length + ' de 6' : '–'}</span>`;
+  }
+  // resumen de cuentas revisadas, posibles bots y suspendidas en la selección
+  function renderBots(todas) {
+    const el = $('#inter-bots');
+    if (!CLASE) { el.textContent = 'Cargando los perfiles de las cuentas…'; return; }
+    let rev = 0, bot = 0, susp = 0, noenc = 0, iRev = 0, iBot = 0, iSusp = 0, iTot = 0;
+    for (const e of todas) {
+      const c = claseDe(e.h.toLowerCase()); iTot += e.tot;
+      if (!c || c.c === 'sindato') continue;
+      rev++; iRev += e.tot;
+      if (c.c === 'bot') { bot++; iBot += e.tot; } else if (c.c === 'susp') { susp++; iSusp += e.tot; } else if (c.c === 'noenc') { noenc++; iSusp += e.tot; }
+    }
+    el.innerHTML = !todas.length ? '' : `De las ${fmt.format(todas.length)} cuentas, se revisó el perfil de ${fmt.format(rev)} (concentran el ${pct(iRev, iTot)} % de las interacciones). `
+      + `<b>${fmt.format(bot)} son posibles bots</b> (${pct(iBot, iRev)} % de las interacciones revisadas) y `
+      + `<b>${fmt.format(susp)} están suspendidas</b>${noenc ? ` y ${fmt.format(noenc)} no se encontraron` : ''} (${pct(iSusp, iRev)} %).`;
   }
 
   // ---------- impacto ----------
@@ -792,6 +884,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     if (S.term) filtros.push(`con «${S.term}»`);
     if (qTokens.length) filtros.push(`que contienen «${S.q.trim()}»`);
     if (S.cuenta) filtros.push(`con @${(ranking.get(S.cuenta) || {}).h || S.cuenta}`);
+    if (S.clase !== 'todas') filtros.push(S.clase === 'bot' ? 'con posibles bots' : 'con cuentas suspendidas o no encontradas');
     $('#impacto-sub').textContent = !propiosElegidos()
       ? 'Marcá tweets o respuestas en «Incluir»: los retweets no tienen cifras propias de impacto.'
       : !S.niveles.size ? 'No hay ningún nivel de lenguaje elegido.'
@@ -898,11 +991,12 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     if (S.term) filtros.push(`con «${S.term}»`);
     if (qTokens.length) filtros.push(`que contienen «${S.q.trim()}»`);
     if (S.cuenta) filtros.push(`con @${(ranking.get(S.cuenta) || {}).h || S.cuenta}`);
+    if (S.clase !== 'todas') filtros.push(S.clase === 'bot' ? 'con posibles bots' : 'con cuentas suspendidas o no encontradas');
     const tl = met === 'n' ? tiposLabel() : propiosLabel() || 'retweets';
     $('#chart-h').textContent = `${METRICAS[met]} por mes`;
     svg.setAttribute('aria-label', `${METRICAS[met]} por mes y nivel de lenguaje`);
     document.querySelectorAll('.metrica').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.metrica === met)));
-    $('#tabla-sum').textContent = `Ver la tabla por año (${METRICAS[met].toLowerCase()})`;
+    $('#tabla-sum').textContent = `Ver la tabla (${METRICAS[met].toLowerCase()})`;
     $('#chart-sub').textContent = (met === 'n' ? '' : `${METRICAS[met]} de `) + (met === 'n' ? tl.charAt(0).toUpperCase() + tl.slice(1) : tl) + ', '
       + (todosNiveles() ? 'todos los niveles' : S.niveles.size ? `solo lenguaje ${nivelesLabel()}` : 'ningún nivel elegido')
       + (filtros.length ? ', ' + filtros.join(', ') : '') + '. Tocá un mes o arrastrá sobre el gráfico para elegir un período.'
@@ -1014,15 +1108,33 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     update();
   }));
 
+  // tabla por año o por mes, con el promedio por día (días reales: del primer dato a la última actualización)
+  const diaDe = (ts) => Math.floor((ts - OFF) / 86400);
+  const diaFecha = (y, m, d) => Math.floor(Date.UTC(y, m, d) / 86400000);
   function renderTabla() {
-    const y0 = Math.floor(MK0 / 12), y1 = Math.floor(MK1 / 12);
-    let h = '<thead><tr><th>Año</th><th>Convencional</th><th>Confrontativo</th><th>Procaz</th><th>Sin texto</th><th>Total</th></tr></thead><tbody>';
-    for (let y = y1; y >= y0; y--) {
-      const a = [0, 0, 0, 0];
-      for (let i = 0; i < NM; i++) if (Math.floor((MK0 + i) / 12) === y) for (let k = 0; k < 4; k++) a[k] += (monthlyV || monthly)[i][k];
+    document.querySelectorAll('.por').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.por === S.tablaPor)));
+    const M = monthlyV || monthly, porMes = S.tablaPor === 'mes';
+    const d0 = diaDe(T[0].ts), d1 = diaDe(Math.max(T[T.length - 1].ts, RMAX));
+    const f = monthlyV ? (v) => corto(v) : (v) => fmt.format(v);
+    const fd = (v) => v >= 10 ? f(Math.round(v)) : fmt1.format(Math.round(v * 10) / 10);
+    let h = `<thead><tr><th>${porMes ? 'Mes' : 'Año'}</th><th>Convencional</th><th>Confrontativo</th><th>Procaz</th><th>Sin texto</th><th>Total</th><th>Promedio por día</th></tr></thead><tbody>`;
+    const fila = (lab, a, ini, fin) => {
       const tot = a[0] + a[1] + a[2] + a[3];
-      if (!tot) continue;
-      h += `<tr><td>${y}</td>${a.map((v) => `<td>${fmt.format(v)}</td>`).join('')}<td>${fmt.format(tot)}</td></tr>`;
+      if (!tot) return '';
+      const dias = Math.max(1, Math.min(fin, d1) - Math.max(ini, d0) + 1);
+      return `<tr><td>${lab}</td>${a.map((v) => `<td>${f(v)}</td>`).join('')}<td>${f(tot)}</td><td>${fd(tot / dias)}</td></tr>`;
+    };
+    if (porMes) {
+      for (let i = NM - 1; i >= 0; i--) {
+        const mk = MK0 + i, y = Math.floor(mk / 12), m = mk % 12;
+        h += fila(mesLabel(mk), M[i], diaFecha(y, m, 1), diaFecha(y, m + 1, 1) - 1);
+      }
+    } else {
+      for (let y = Math.floor(MK1 / 12); y >= Math.floor(MK0 / 12); y--) {
+        const a = [0, 0, 0, 0];
+        for (let i = 0; i < NM; i++) if (Math.floor((MK0 + i) / 12) === y) for (let k = 0; k < 4; k++) a[k] += M[i][k];
+        h += fila(String(y), a, diaFecha(y, 0, 1), diaFecha(y, 11, 31));
+      }
     }
     $('#tabla').innerHTML = h + '</tbody>';
   }
@@ -1143,6 +1255,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     if (S.q.trim()) add(`«${S.q.trim()}»`, () => { S.q = ''; $('#q').value = ''; });
     if (S.term) add(`palabra: ${S.term}`, () => { S.term = null; });
     if (S.cuenta) add(`cuenta: @${(ranking.get(S.cuenta) || {}).h || S.cuenta}`, () => { S.cuenta = null; });
+    if (S.clase !== 'todas') add(S.clase === 'bot' ? 'con posibles bots' : 'con cuentas suspendidas o no encontradas', () => { S.clase = 'todas'; });
     if (rangoActivo()) add(rangoLabel(), () => { S.from = MK0; S.to = MK1; syncRango(); });
     const nivel = todosNiveles() ? '' : ` · ${S.niveles.size ? nivelesSel().map((l) => LV[l].toLowerCase()).join(' + ') : 'ningún nivel'}`;
     const detalle = S.tipos.size > 1 ? ` <span class="sub">(${tiposLabel()})</span>` : '';
@@ -1196,6 +1309,8 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     if (S.cuenta) $('.explorar').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   });
   $('#inter-mas').addEventListener('click', () => { S.nCuentas += 20; renderInteracciones(); });
+  document.querySelectorAll('.clase').forEach((b) => b.addEventListener('click', () => { S.clase = b.dataset.clase; update(); }));
+  document.querySelectorAll('.por').forEach((b) => b.addEventListener('click', () => { S.tablaPor = b.dataset.por; renderTabla(); }));
 
   // ---------- tipos (filtros cruzados) ----------
   function syncTipos() {
@@ -1241,12 +1356,16 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const orden = RT_MAN.slice().sort((a, b) => b.mk1 - a.mk1);
     Promise.all(orden.map((m) => fetch(m.f)
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => { for (const r of d.t) R.push(retweetDe(r, d.a)); })
+      .then((d) => { for (const r of d.t) { const t = retweetDe(r, d.a); R.push(t); if (t.ts > RMAX) RMAX = t.ts; } })
       .catch(() => { fallidos.push(m); })
       .finally(() => { llegados++; refrescar(); })))
       .then(() => {
         btn.removeAttribute('aria-busy');
         performance.mark('retweets');
+        // perfiles de las cuentas para las señales de automatización
+        fetch('data/cuentas.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+          .then((c) => { clasificarCuentas(c); update(false); })
+          .catch(() => { $('#inter-bots').textContent = 'No se pudieron cargar los perfiles de las cuentas.'; });
         // texto sin tildes para el buscador, de a tandas cuando el navegador está libre
         const libre = window.requestIdleCallback || ((f) => setTimeout(f, 30));
         let i = 0;
