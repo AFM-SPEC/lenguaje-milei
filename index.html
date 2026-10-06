@@ -132,6 +132,35 @@ h1 {
 .lema input { margin: 0; width: 16px; height: 16px; accent-color: var(--navy); flex: none; cursor: pointer; }
 .lema .sw { margin-right: -2px; }
 
+/* ---------- impacto ---------- */
+.impacto { margin-top: 34px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tile { display: flex; flex-direction: column; gap: 2px; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px 13px; }
+.t-lab { font-size: 14px; font-weight: 500; }
+.t-num { font-family: var(--f-display); font-weight: 400; font-size: 28px; line-height: 1.15; letter-spacing: -.015em; font-variant-numeric: lining-nums; }
+.t-sub { font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+table.por-nivel { margin-top: 14px; width: 100%; min-width: 640px; font-size: 13.5px; }
+.por-nivel .niv { display: inline-flex; align-items: center; gap: 7px; }
+.por-nivel .tot td { font-weight: 600; border-bottom: 0; }
+.por-nivel .con-barra { white-space: nowrap; }
+.barra { display: inline-block; height: 6px; margin-right: 8px; vertical-align: middle; border-radius: 1px; background: var(--ink-2); }
+.barra.b0 { background: var(--lv0); } .barra.b1 { background: var(--lv1); } .barra.b2 { background: var(--lv2); }
+@media (max-width: 600px) { /* en el celular, un bloque por nivel en vez de una tabla ancha */
+  table.por-nivel { min-width: 0; }
+  .por-nivel thead { display: none; }
+  .por-nivel tr { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 18px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .por-nivel td { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 0; border: 0; font-size: 12.5px; }
+  .por-nivel td::before { content: attr(data-label); color: var(--muted); text-align: left; }
+  .por-nivel td > span { white-space: nowrap; }
+  .por-nivel td:first-child { grid-column: 1 / -1; justify-content: flex-start; text-align: left; font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .por-nivel .barra { display: none; }
+}
+.nota { font-size: 13px; line-height: 1.45; color: var(--muted); margin: 8px 0 0; max-width: 90ch; }
+.metricas { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
+.metrica { font-size: 12.5px; background: none; border: 1px solid var(--line-2); border-radius: var(--r); padding: 4px 10px; cursor: pointer; color: var(--ink-2); }
+.metrica:hover { border-color: var(--ink-2); }
+.metrica[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--crema); }
+
 /* ---------- gráfico ---------- */
 .chart-sec { margin-top: 34px; }
 .sec-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 18px; margin-bottom: 10px; }
@@ -252,14 +281,14 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
 
 
 @media (max-width: 900px) {
-  .modos { grid-template-columns: 1fr 1fr; }
+  .modos, .tiles { grid-template-columns: 1fr 1fr; }
   .explorar { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .filtros { position: static; max-height: none; overflow: visible; }
   .metodo { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 480px) {
   .m-def { display: none; }
-  .m-num { font-size: 22px; }
+  .m-num, .t-num { font-size: 22px; }
   .tw-text { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -314,10 +343,34 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     </fieldset>
   </div>
 
+  <section class="impacto" aria-labelledby="impacto-h">
+    <div class="sec-h">
+      <div>
+        <h2 id="impacto-h">Impacto</h2>
+        <div class="sub" id="impacto-sub"></div>
+      </div>
+    </div>
+    <div class="tiles" aria-live="polite">
+      <div class="tile"><span class="t-lab">Visualizaciones</span><span class="t-num" id="i-views">–</span><span class="t-sub" id="i-views-p"></span></div>
+      <div class="tile"><span class="t-lab">Me gusta</span><span class="t-num" id="i-likes">–</span><span class="t-sub" id="i-likes-p"></span></div>
+      <div class="tile"><span class="t-lab">Retweets recibidos</span><span class="t-num" id="i-rt">–</span><span class="t-sub" id="i-rt-p"></span></div>
+      <div class="tile"><span class="t-lab">Respuestas recibidas</span><span class="t-num" id="i-rep">–</span><span class="t-sub" id="i-rep-p"></span></div>
+    </div>
+    <div class="tabla-scroll"><table class="por-nivel" id="por-nivel"></table></div>
+    <p class="nota" id="impacto-nota"></p>
+  </section>
+
   <section class="chart-sec" aria-labelledby="chart-h">
     <div class="sec-h">
       <div>
         <h2 id="chart-h">Publicaciones por mes</h2>
+        <div class="metricas" role="group" aria-label="Qué mide el gráfico">
+          <button type="button" class="metrica" data-metrica="n" aria-pressed="true">Publicaciones</button>
+          <button type="button" class="metrica" data-metrica="views" aria-pressed="false">Visualizaciones</button>
+          <button type="button" class="metrica" data-metrica="likes" aria-pressed="false">Me gusta</button>
+          <button type="button" class="metrica" data-metrica="rt" aria-pressed="false">Retweets recibidos</button>
+          <button type="button" class="metrica" data-metrica="rep" aria-pressed="false">Respuestas recibidas</button>
+        </div>
         <div class="sub" id="chart-sub"></div>
       </div>
       <div class="legend" id="legend"></div>
@@ -327,7 +380,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       <div class="tip" id="tip" hidden></div>
     </div>
     <details class="tabla">
-      <summary>Ver la tabla por año</summary>
+      <summary id="tabla-sum">Ver la tabla por año</summary>
       <div class="tabla-scroll"><table id="tabla"></table></div>
     </details>
   </section>
@@ -362,7 +415,8 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
           <option value="new">Más recientes</option>
           <option value="old">Más antiguos</option>
           <option value="likes">Más me gusta</option>
-          <option value="views">Más vistas</option>
+          <option value="views">Más visualizaciones</option>
+          <option value="rts">Más retweets</option>
           <option value="rep">Más respuestas</option>
         </select>
       </div>
@@ -414,7 +468,9 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       <h3>Fuentes</h3>
       <p><b>Tweets y respuestas:</b> una búsqueda día por día de todo lo publicado por @JMilei entre el 1 de octubre de 2015 y el 6 de octubre de 2026, hecha a través de FxTwitter (que consulta la búsqueda de X), sumada al archivo de archivopolitico.com y a capturas del Wayback Machine. El archivo original solo guardaba una parte de los tweets de cada mes desde mediados de 2018, y por eso antes aparecían caídas que no eran reales. Los tweets que Milei borró solo están si alguna de esas fuentes los había guardado. Desde octubre de 2026 la base se actualiza todos los días con la misma búsqueda.</p>
       <p><b>Retweets:</b> capturas del Wayback Machine, resueltas con el servicio público de tweets incrustados de X. X no permite buscar retweets viejos, así que solo están los que el Wayback archivó: pocos antes de 2020, pocos en 2023 y una cobertura irregular en el resto. En una comparación con el perfil real de septiembre de 2026, el Wayback tenía el 86 % de los retweets. Se usaron dos tipos de captura: la de cada retweet suelto, y la del perfil de Milei, que muestra sus últimos 20 a 40 movimientos. Las capturas del perfil sumaron 2.785 retweets de 2017 a 2023, incluidos algunos de tweets que después se borraron, cuyo texto quedó en la captura. En las capturas desde julio de 2022 X ya no indica cuándo se retuiteó, así que la fecha se estimó por el orden del perfil y aparece con «≈». Los retweets de tweets borrados que solo se conocen por su número no se incluyen. Desde octubre de 2026 los retweets se suman todos los días con la búsqueda de X, que encuentra los de la última semana; su fecha se estima a la hora y aparece con «≈».</p>
-      <p>Las cifras de me gusta, retweets y vistas de las publicaciones propias se tomaron el 30 de septiembre de 2026 para las anteriores a esa fecha; las posteriores se actualizan durante sus primeros días. Las vistas solo existen desde fines de 2022.</p>
+      <p>Las cifras de visualizaciones, me gusta, retweets y respuestas de las publicaciones propias se tomaron el 30 de septiembre de 2026 para las anteriores a esa fecha; las posteriores se actualizan durante sus primeros días. Las visualizaciones (lo que X muestra como alcance de cada publicación) solo existen desde el 15 de diciembre de 2022. La sección «Impacto» y el gráfico suman solo tweets y respuestas propios: en los retweets las cifras son del tweet original, no de Milei.</p>
+      <h3>Cobertura</h3>
+      <p>El 6 de octubre de 2026 el perfil de Milei en X informaba 397.981 publicaciones entre tweets, respuestas y retweets. Los tweets y respuestas están completos; la diferencia con este archivo son retweets viejos, sobre todo de 2015 a 2019, de 2023 y de parte de 2022, porque X no deja buscarlos y ninguna fuente gratuita los conserva. Desde octubre de 2026 se suman todos los días, así que de acá en adelante no se pierde ninguno.</p>
     </div>
   </section>
 </div>
@@ -429,6 +485,16 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   const $ = (s) => document.querySelector(s);
   const fmt = new Intl.NumberFormat('es-AR');
   const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+  // cifras grandes: «3,7 mil millones» en los totales y «1.500 M» / «412 mil» en ejes y promedios
+  const fmtLargo = new Intl.NumberFormat('es-AR', { notation: 'compact', compactDisplay: 'long', maximumFractionDigits: 1 });
+  const fmt1 = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 });
+  const corto = (v) => v >= 1e6 ? fmt1.format(v >= 1e8 ? Math.round(v / 1e6) : Math.round(v / 1e5) / 10) + ' M'
+    : v >= 1e4 ? fmt.format(Math.round(v / 1e3)) + ' mil' : fmt.format(Math.round(v));
+  // qué mide el gráfico: cantidad de publicaciones o una cifra de impacto (solo tweets y respuestas propios)
+  const METRICAS = { n: 'Publicaciones', views: 'Visualizaciones', likes: 'Me gusta', rt: 'Retweets recibidos', rep: 'Respuestas recibidas' };
+  const IMPACTO = ['views', 'likes', 'rt', 'rep'];
+  const VISTAS_DESDE = 'el 15 de diciembre de 2022'; // X empezó a contar visualizaciones ese mes
+  const tieneDato = (t, k) => k === 'views' ? t.views > 0 : t[k] != null;
   const LV = ['Convencional', 'Confrontativo', 'Procaz'];
   const HASH = ['convencional', 'confrontativo', 'procaz'];
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -489,7 +555,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   const TIPOS = [['tweet', 'tweets'], ['respuesta', 'respuestas'], ['retweet', 'retweets']];
 
   // ---------- estado ----------
-  const S = { niveles: new Set([0, 1, 2]), lema: '', q: '', from: MK0, to: MK1, tipos: new Set(['tweet', 'respuesta', 'retweet']), sort: 'new', term: null, n: 50 };
+  const S = { niveles: new Set([0, 1, 2]), lema: '', q: '', from: MK0, to: MK1, tipos: new Set(['tweet', 'respuesta', 'retweet']), sort: 'new', term: null, n: 50, metrica: 'n' };
   const tiposLabel = () => TIPOS.filter(([k]) => S.tipos.has(k)).map(([, p]) => p).join(' + ');
   // niveles combinables (filtros cruzados); con los tres elegidos es «Todos» y entran también los que no tienen texto
   const todosNiveles = () => S.niveles.size === 3;
@@ -501,7 +567,9 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   const rangoActivo = () => S.from !== MK0 || S.to !== MK1;
   const rangoLabel = () => S.from === S.to ? mesLabel(S.from) : `${mesLabel(S.from)} – ${mesLabel(S.to)}`;
   let qTokens = [];
-  let lista = [], monthly = [];
+  let lista = [], monthly = [], monthlyV = null, imp = null;
+  const propiosElegidos = () => S.tipos.has('tweet') || S.tipos.has('respuesta');
+  const propiosLabel = () => TIPOS.filter(([k]) => k !== 'retweet' && S.tipos.has(k)).map(([, p]) => p).join(' + ');
   // el lema «Viva la libertad, carajo» no cuenta, o cuenta como procaz o como confrontativo (S.lema)
   const nivelLema = () => S.lema === 'procaz' ? 2 : S.lema === 'confrontativo' ? 1 : 0;
   const level = (t) => t.empty ? -1 : Math.max(t.hasP ? 2 : t.hasC ? 1 : 0, t.hasL ? nivelLema() : 0);
@@ -527,6 +595,11 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const counts = [0, 0, 0]; let vacios = 0;
     const porTipo = { tweet: 0, respuesta: 0, retweet: 0 };
     monthly = Array.from({ length: NM }, () => [0, 0, 0, 0]);
+    const met = S.metrica;
+    monthlyV = met === 'n' ? null : Array.from({ length: NM }, () => [0, 0, 0, 0]);
+    // impacto de la selección, por nivel (3 = sin texto): publicaciones, suma y cuántas tienen el dato
+    imp = { n: [0, 0, 0, 0], s: {}, c: {} };
+    for (const k of IMPACTO) { imp.s[k] = [0, 0, 0, 0]; imp.c[k] = [0, 0, 0, 0]; }
     lista = [];
     for (const src of R ? [T, R] : [T]) {
       for (const t of src) {
@@ -535,19 +608,27 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
         const tiempo = enTiempo(t), nivelOk = nivelElegido(L);
         if (tiempo && nivelOk) porTipo[t.kind]++;
         if (!S.tipos.has(t.kind)) continue;
-        monthly[t.mk - MK0][L < 0 ? 3 : L]++;
+        const li = L < 0 ? 3 : L, propio = t.kind !== 'retweet';
+        monthly[t.mk - MK0][li]++;
+        if (monthlyV && propio && t[met]) monthlyV[t.mk - MK0][li] += t[met];
         if (!tiempo) continue;
         if (L < 0) vacios++; else counts[L]++;
-        if (nivelOk) lista.push(t);
+        if (!nivelOk) continue;
+        lista.push(t);
+        if (propio) {
+          imp.n[li]++;
+          for (const k of IMPACTO) if (tieneDato(t, k)) { imp.s[k][li] += t[k]; imp.c[k][li]++; }
+        }
       }
     }
     for (const [k] of TIPOS) $('#c-' + k).textContent = k === 'retweet' && !R ? fmt.format(RT_TOTAL) : fmt.format(porTipo[k]);
     syncTipos();
     const key = { new: (a, b) => b.ts - a.ts, old: (a, b) => a.ts - b.ts,
       likes: (a, b) => (b.likes ?? -1) - (a.likes ?? -1), views: (a, b) => (b.views ?? -1) - (a.views ?? -1),
-      rep: (a, b) => (b.rep ?? -1) - (a.rep ?? -1) }[S.sort];
+      rep: (a, b) => (b.rep ?? -1) - (a.rep ?? -1), rts: (a, b) => (b.rt ?? -1) - (a.rt ?? -1) }[S.sort];
     lista.sort(key);
     renderModos(counts, vacios);
+    renderImpacto();
     renderChart();
     renderTabla();
     renderTerms();
@@ -574,6 +655,55 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     $('#app').classList.toggle('lema-confrontativo', S.lema === 'confrontativo');
   }
 
+  // ---------- impacto ----------
+  function renderImpacto() {
+    const suma = (arr) => arr[0] + arr[1] + arr[2] + arr[3];
+    const n = suma(imp.n);
+    const ok = propiosElegidos() && S.niveles.size > 0;
+    for (const k of IMPACTO) {
+      const tot = suma(imp.s[k]), c = suma(imp.c[k]);
+      const el = $('#i-' + k);
+      el.textContent = ok && c ? fmtLargo.format(tot) : '–';
+      el.title = ok && c ? fmt.format(tot) : '';
+      $('#i-' + k + '-p').textContent = ok && c ? `${corto(tot / c)} por publicación en promedio` : k === 'views' && ok && n ? `Sin datos: X las cuenta desde ${VISTAS_DESDE}` : '';
+    }
+    const filtros = [];
+    if (rangoActivo()) filtros.push(rangoLabel());
+    if (S.term) filtros.push(`con «${S.term}»`);
+    if (qTokens.length) filtros.push(`que contienen «${S.q.trim()}»`);
+    $('#impacto-sub').textContent = !propiosElegidos()
+      ? 'Marcá tweets o respuestas en «Incluir»: los retweets no tienen cifras propias de impacto.'
+      : !S.niveles.size ? 'No hay ningún nivel de lenguaje elegido.'
+      : `Lo que recibieron ${fmt.format(n)} ${propiosLabel()} de Milei`
+        + (todosNiveles() ? '' : ` de lenguaje ${nivelesLabel()}`) + (filtros.length ? ', ' + filtros.join(', ') : '') + '.';
+    // desglose por nivel: totales y promedios, con una barra para comparar el promedio de visualizaciones
+    const filas = nivelesSel().concat(todosNiveles() && imp.n[3] ? [3] : []);
+    const prom = (k, li) => imp.c[k][li] ? imp.s[k][li] / imp.c[k][li] : null;
+    // la barra compara solo los tres niveles (los «sin texto» son pocos y distorsionan la escala)
+    const maxV = Math.max(1, ...filas.filter((li) => li < 3).map((li) => prom('views', li) || 0));
+    const COL = ['Publicaciones', 'Visualizaciones', 'Visualizaciones promedio', 'Me gusta promedio', 'Retweets promedio', 'Respuestas promedio'];
+    const celda = (i, v, extra = '') => `<td data-label="${COL[i]}"><span>${v == null ? '–' : extra + v}</span></td>`;
+    const fila = (cls, nombre, nn, sv, pv, pl, pr, pp, barra) => `<tr${cls}><td><span class="niv">${nombre}</span></td>`
+      + celda(0, fmt.format(nn)) + celda(1, sv == null ? null : corto(sv))
+      + celda(2, pv == null ? null : corto(pv), barra && pv != null ? `<i class="barra ${barra}" style="width:${Math.max(2, pv / maxV * 72)}px"></i>` : '')
+      + celda(3, pl == null ? null : corto(pl)) + celda(4, pr == null ? null : corto(pr)) + celda(5, pp == null ? null : corto(pp)) + '</tr>';
+    let h = `<thead><tr><th>Nivel</th>${COL.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+    for (const li of filas) {
+      h += fila('', li < 3 ? `<i class="sw sw${li}"></i>${LV[li]}` : 'Sin texto', imp.n[li], imp.c.views[li] ? imp.s.views[li] : null,
+        prom('views', li), prom('likes', li), prom('rt', li), prom('rep', li), li < 3 ? 'b' + li : '');
+    }
+    if (filas.length > 1) {
+      const t = (k) => suma(imp.c[k]) ? suma(imp.s[k]) / suma(imp.c[k]) : null;
+      h += fila(' class="tot"', 'Total', n, suma(imp.c.views) ? suma(imp.s.views) : null, t('views'), t('likes'), t('rt'), t('rep'), '');
+    }
+    $('#por-nivel').innerHTML = ok && n ? h + '</tbody>' : '';
+    const cv = suma(imp.c.views);
+    $('#impacto-nota').textContent = ok && n
+      ? `Me gusta, retweets y respuestas se miden desde 2015. Las visualizaciones, solo desde ${VISTAS_DESDE}, cuando X empezó a contarlas: de las ${fmt.format(n)} publicaciones de la selección, ${fmt.format(cv)} tienen ese dato y los promedios se calculan sobre ellas.`
+        + (S.tipos.has('retweet') ? ' Los retweets no suman: sus cifras son del tweet original.' : '')
+      : '';
+  }
+
   // ---------- gráfico ----------
   function niceStep(max, target) {
     const raw = max / target, mag = Math.pow(10, Math.floor(Math.log10(raw)));
@@ -589,13 +719,14 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const box = $('#chart-box');
     const W = Math.max(280, box.clientWidth);
     const H = W < 600 ? 170 : 210;
-    const ml = 46, mr = 4, mt = 10, mb = 24; // ml: lugar para «10.000» en Libre Franklin
+    const met = S.metrica, M = monthlyV || monthly;
+    const ml = met === 'n' ? 46 : 58, mr = 4, mt = 10, mb = 24; // ml: lugar para «10.000» o «1.500 M» en Libre Franklin
     const iw = W - ml - mr, ih = H - mt - mb;
     const band = iw / NM;
     const gapX = band > 5 ? 2 : band > 3 ? 1 : 0.5;
     const bw = Math.max(0.8, Math.min(24, band - gapX));
-    const series = nivelesSel().reverse();
-    const tot = monthly.map((m) => series.reduce((s, l) => s + m[l], 0));
+    const series = met !== 'n' && !propiosElegidos() ? [] : nivelesSel().reverse();
+    const tot = M.map((m) => series.reduce((s, l) => s + m[l], 0));
     const max = Math.max(1, ...tot);
     const step = Math.max(1, niceStep(max, 3)); // son cantidades: sin rayas de 0,5
     const top = Math.ceil(max / step) * step;
@@ -607,7 +738,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     }
     for (let v = 0; v <= top + 1e-9; v += step) {
       s += `<line class="${v ? 'grid' : 'base'}" x1="${ml}" x2="${W - mr}" y1="${yv(v)}" y2="${yv(v)}"/>`;
-      s += `<text class="yl" x="${ml - 7}" y="${yv(v)}" dy="0.32em">${fmt.format(v)}</text>`;
+      s += `<text class="yl" x="${ml - 7}" y="${yv(v)}" dy="0.32em">${met === 'n' ? fmt.format(v) : corto(v)}</text>`;
     }
     const y0 = Math.floor(MK0 / 12), y1 = Math.floor(MK1 / 12);
     const every = 12 * band >= 38 ? 1 : 2;
@@ -619,10 +750,10 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     }
     for (let i = 0; i < NM; i++) {
       const x = ml + i * band + (band - bw) / 2;
-      const nz = series.filter((l) => monthly[i][l] > 0);
+      const nz = series.filter((l) => M[i][l] > 0);
       let cum = 0;
       nz.forEach((l, j) => {
-        const h = (monthly[i][l] / top) * ih;
+        const h = (M[i][l] / top) * ih;
         let yy = mt + ih - cum - h, hh = h;
         if (j > 0 && h > 2.5) hh = h - 2;
         cum += h;
@@ -630,7 +761,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
         else s += `<rect class="b${l}" x="${x}" y="${yy}" width="${bw}" height="${Math.max(hh, 0.8)}"/>`;
       });
     }
-    if (!series.length) s += `<text class="vacio" x="${ml + iw / 2}" y="${mt + ih / 2}" dy="0.32em">Elegí al menos un nivel de lenguaje</text>`;
+    if (!series.length) s += `<text class="vacio" x="${ml + iw / 2}" y="${mt + ih / 2}" dy="0.32em">${!S.niveles.size ? 'Elegí al menos un nivel de lenguaje' : 'Marcá tweets o respuestas: los retweets no tienen cifras propias'}</text>`;
     s += `<rect class="hov" id="hov" x="0" y="${mt}" width="${band}" height="${ih}" visibility="hidden"/>`;
     s += `<rect class="drag" id="drag" x="0" y="${mt}" width="0" height="${ih}" visibility="hidden"/>`;
     const svg = $('#chart');
@@ -645,22 +776,29 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const filtros = [];
     if (S.term) filtros.push(`con «${S.term}»`);
     if (qTokens.length) filtros.push(`que contienen «${S.q.trim()}»`);
-    const tl = tiposLabel();
-    $('#chart-sub').textContent = tl.charAt(0).toUpperCase() + tl.slice(1) + ', '
+    const tl = met === 'n' ? tiposLabel() : propiosLabel() || 'retweets';
+    $('#chart-h').textContent = `${METRICAS[met]} por mes`;
+    svg.setAttribute('aria-label', `${METRICAS[met]} por mes y nivel de lenguaje`);
+    document.querySelectorAll('.metrica').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.metrica === met)));
+    $('#tabla-sum').textContent = `Ver la tabla por año (${METRICAS[met].toLowerCase()})`;
+    $('#chart-sub').textContent = (met === 'n' ? '' : `${METRICAS[met]} de `) + (met === 'n' ? tl.charAt(0).toUpperCase() + tl.slice(1) : tl) + ', '
       + (todosNiveles() ? 'todos los niveles' : S.niveles.size ? `solo lenguaje ${nivelesLabel()}` : 'ningún nivel elegido')
       + (filtros.length ? ', ' + filtros.join(', ') : '') + '. Tocá un mes o arrastrá sobre el gráfico para elegir un período.'
-      + (S.tipos.has('retweet') ? ' Los retweets solo están donde el Wayback Machine los archivó: hay pocos antes de 2020 y en 2023.' : '');
+      + (met === 'views' ? ` X cuenta las visualizaciones desde ${VISTAS_DESDE}; antes no hay datos.` : '')
+      + (met !== 'n' && S.tipos.has('retweet') ? ' Los retweets no suman: sus cifras son del tweet original.' : '')
+      + (met === 'n' && S.tipos.has('retweet') ? ' Los retweets solo están donde el Wayback Machine los archivó: hay pocos antes de 2020 y en 2023.' : '');
   }
 
   // globo de información: un mes (a === b) o un tramo mientras se arrastra
   function showTip(a, b = a, arrastrando = false) {
-    const m = [0, 0, 0];
-    for (let i = a; i <= b; i++) for (let l = 0; l < 3; l++) m[l] += monthly[i][l];
+    const m = [0, 0, 0], M = monthlyV || monthly, f = (v) => fmt.format(v);
+    for (let i = a; i <= b; i++) for (let l = 0; l < 3; l++) m[l] += M[i][l];
     const total = m[0] + m[1] + m[2];
     let h = `<b>${a === b ? mesLabel(MK0 + a) : `${mesLabel(MK0 + a)} – ${mesLabel(MK0 + b)}`}</b>`;
     const rows = nivelesSel().reverse();
-    for (const l of rows) h += `<div class="row"><span><i class="sw sw${l}"></i>${LV[l]}</span><span class="num">${fmt.format(m[l])}${total ? ` · ${pct(m[l], total)} %` : ''}</span></div>`;
-    h += `<div class="row tot"><span>Total con texto</span><span class="num">${fmt.format(total)}</span></div>`;
+    if (monthlyV) h += `<div class="row"><span>${METRICAS[S.metrica]}</span></div>`;
+    for (const l of rows) h += `<div class="row"><span><i class="sw sw${l}"></i>${LV[l]}</span><span class="num">${f(m[l])}${total ? ` · ${pct(m[l], total)} %` : ''}</span></div>`;
+    h += `<div class="row tot"><span>${monthlyV ? 'Total' : 'Total con texto'}</span><span class="num">${f(total)}</span></div>`;
     const solo = S.from === MK0 + a && S.to === MK0 + a;
     h += `<div class="hint">${arrastrando ? 'Soltá para ver los tweets de este período'
       : solo ? 'Tocá de nuevo para quitar el filtro' : 'Tocá para ver este mes o arrastrá para elegir un período'}</div>`;
@@ -759,7 +897,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     let h = '<thead><tr><th>Año</th><th>Convencional</th><th>Confrontativo</th><th>Procaz</th><th>Sin texto</th><th>Total</th></tr></thead><tbody>';
     for (let y = y1; y >= y0; y--) {
       const a = [0, 0, 0, 0];
-      for (let i = 0; i < NM; i++) if (Math.floor((MK0 + i) / 12) === y) for (let k = 0; k < 4; k++) a[k] += monthly[i][k];
+      for (let i = 0; i < NM; i++) if (Math.floor((MK0 + i) / 12) === y) for (let k = 0; k < 4; k++) a[k] += (monthlyV || monthly)[i][k];
       const tot = a[0] + a[1] + a[2] + a[3];
       if (!tot) continue;
       h += `<tr><td>${y}</td>${a.map((v) => `<td>${fmt.format(v)}</td>`).join('')}<td>${fmt.format(tot)}</td></tr>`;
@@ -854,7 +992,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     if (t.rep != null) m.push(`${fmt.format(t.rep)} respuestas`);
     if (t.rt != null) m.push(`${fmt.format(t.rt)} retweets`);
     if (t.likes != null) m.push(`${fmt.format(t.likes)} me gusta`);
-    if (t.views) m.push(`${fmt.format(t.views)} vistas`);
+    if (t.views) m.push(`${fmt.format(t.views)} visualizaciones`);
     if (rt && t.ots) m.push(`original del ${fechaCorta(t.ots, false)}`);
     const link = rt ? `https://x.com/${encodeURIComponent(t.autor)}/status/${oidTexto(t.oid)}` : `https://x.com/JMilei/status/${t.id}`;
     return `<li class="tw${rt ? ' es-rt' : ''}"><div class="tw-meta">${meta.join('<span aria-hidden="true">·</span>')}</div>`
@@ -921,6 +1059,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   let tq;
   $('#q').addEventListener('input', (e) => { clearTimeout(tq); tq = setTimeout(() => { S.q = e.target.value; update(); }, 140); });
   $('#sort').addEventListener('change', (e) => { S.sort = e.target.value; update(); });
+  document.querySelectorAll('.metrica').forEach((b) => b.addEventListener('click', () => { S.metrica = b.dataset.metrica; update(false); }));
 
   // ---------- tipos (filtros cruzados) ----------
   function syncTipos() {
