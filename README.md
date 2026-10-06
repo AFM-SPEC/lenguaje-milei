@@ -3,7 +3,7 @@
 Explorador de los tweets, respuestas y retweets de Javier Milei (@JMilei) entre octubre de 2015 y octubre de 2026, clasificados en tres niveles de lenguaje: convencional, confrontativo y procaz.
 
 - 23.098 tweets y 16.532 respuestas, incluidos en `index.html`.
-- 229.310 retweets en `data/`, un archivo por año (o parte de año), que la página carga al abrirse.
+- 229.368 retweets en `data/`, un archivo por año (o parte de año), que la página carga al abrirse.
 
 Se actualiza todos los días con lo nuevo. Página: https://afm-spec.github.io/lenguaje-milei/
 
@@ -20,7 +20,7 @@ La clasificación es automática, con listas de palabras armadas a partir del vo
 
 - Tweets y respuestas: búsqueda día por día a través de FxTwitter, archivopolitico.com y capturas del Wayback Machine. Están completos.
 - Retweets: capturas del Wayback Machine (de cada retweet y del perfil), resueltas con el servicio público de tweets incrustados de X, el conjunto abierto de [milei.nulo.lol](https://milei.nulo.lol) (retweets con hora exacta desde febrero de 2024) y, desde octubre de 2026, la búsqueda de X, que encuentra los de la última semana.
-- El perfil informaba 397.981 publicaciones el 6 de octubre de 2026. La diferencia son retweets viejos (sobre todo de 2015 a 2019, de 2023 y de parte de 2022) que X no deja buscar y ninguna fuente gratuita conserva.
+- El perfil informaba 397.981 publicaciones el 6 de octubre de 2026. Los tweets y respuestas están completos; faltan retweets, casi todos los de 2015 a 2019 y los de julio de 2022 a enero de 2024. Se buscaron en todas las fuentes gratuitas conocidas (Wayback Machine, archive.today, Common Crawl, conjuntos de datos públicos, el servicio de tweets incrustados de X); X no deja buscar retweets de más de una semana, así que esos huecos no se pueden completar gratis.
 
 ## Herramientas
 
