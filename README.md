@@ -12,6 +12,7 @@ Se actualiza todos los días con lo nuevo. Página: https://afm-spec.github.io/l
 - Combinar los tipos (tweets, respuestas, retweets) y los niveles de lenguaje como filtros cruzados, en cualquier combinación.
 - Contar el lema «Viva la libertad, carajo» (o «VLLC») como procaz, como confrontativo o no contarlo.
 - Ver el impacto de la selección: visualizaciones, me gusta, retweets y respuestas recibidas, en total, en promedio y por nivel. Me gusta, retweets y respuestas existen desde 2015; las visualizaciones, desde el 15 de diciembre de 2022, cuando X empezó a contarlas.
+- Ver con quién interactúa: ranking de cuentas por retuiteos, respuestas, citas y menciones (combinables), con el tono de lo que publica sobre cada una; al tocar una cuenta se filtran sus publicaciones.
 - Graficar por mes la cantidad de publicaciones o cualquiera de esas cifras, buscar palabras y elegir un período.
 
 La clasificación es automática, con listas de palabras armadas a partir del vocabulario de los tweets. La sección «Cómo se clasificó» de la página explica el método, sus límites, las fuentes y la cobertura.
