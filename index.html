@@ -452,7 +452,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
         <button type="button" class="por" data-por="mes" aria-pressed="false">Por mes</button>
       </div>
       <div class="tabla-scroll"><table id="tabla"></table></div>
-      <p class="nota">El promedio por día usa los días reales de cada período: el primero cuenta desde el 23 de octubre de 2015 y el último, hasta la fecha de actualización.</p>
+      <p class="nota">Los promedios por mes y por día usan los días reales de cada período: el primero cuenta desde el 23 de octubre de 2015 y el último, hasta la fecha de actualización (un mes equivale a 30,44 días).</p>
     </details>
   </section>
 
@@ -1117,12 +1117,14 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const d0 = diaDe(T[0].ts), d1 = diaDe(Math.max(T[T.length - 1].ts, RMAX));
     const f = monthlyV ? (v) => corto(v) : (v) => fmt.format(v);
     const fd = (v) => v >= 10 ? f(Math.round(v)) : fmt1.format(Math.round(v * 10) / 10);
-    let h = `<thead><tr><th>${porMes ? 'Mes' : 'Año'}</th><th>Convencional</th><th>Confrontativo</th><th>Procaz</th><th>Sin texto</th><th>Total</th><th>Promedio por día</th></tr></thead><tbody>`;
+    let h = `<thead><tr><th>${porMes ? 'Mes' : 'Año'}</th><th>Convencional</th><th>Confrontativo</th><th>Procaz</th><th>Sin texto</th><th>Total</th>${porMes ? '' : '<th>Promedio por mes</th>'}<th>Promedio por día</th></tr></thead><tbody>`;
     const fila = (lab, a, ini, fin) => {
       const tot = a[0] + a[1] + a[2] + a[3];
       if (!tot) return '';
       const dias = Math.max(1, Math.min(fin, d1) - Math.max(ini, d0) + 1);
-      return `<tr><td>${lab}</td>${a.map((v) => `<td>${f(v)}</td>`).join('')}<td>${f(tot)}</td><td>${fd(tot / dias)}</td></tr>`;
+      // meses reales del período (los años incompletos cuentan solo los días con datos)
+      const mes = porMes ? '' : `<td>${fd(tot / (dias / (365.25 / 12)))}</td>`;
+      return `<tr><td>${lab}</td>${a.map((v) => `<td>${f(v)}</td>`).join('')}<td>${f(tot)}</td>${mes}<td>${fd(tot / dias)}</td></tr>`;
     };
     if (porMes) {
       for (let i = NM - 1; i >= 0; i--) {
