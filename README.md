@@ -13,6 +13,8 @@ Se actualiza todos los días con lo nuevo. Página: https://afm-spec.github.io/l
 - Contar el lema «Viva la libertad, carajo» (o «VLLC») como procaz, como confrontativo o no contarlo.
 - Ver el impacto de la selección: visualizaciones, me gusta, retweets y respuestas recibidas, en total, en promedio y por nivel. Me gusta, retweets y respuestas existen desde 2015; las visualizaciones, desde el 15 de diciembre de 2022, cuando X empezó a contarlas.
 - Ver con quién interactúa: ranking de cuentas por retuiteos, respuestas, citas y menciones (combinables), con el tono de lo que publica sobre cada una; al tocar una cuenta se filtran sus publicaciones.
+- Ver cuándo está en X: mapa de actividad por día de la semana y hora (sigue los filtros) y tiempo estimado por día desde febrero de 2024, con el método de milei.nulo.lol.
+- Chequear un tweet: pegar su enlace y ver si es de Milei, si lo retuiteó o si le dio «me gusta».
 - Graficar por mes la cantidad de publicaciones o cualquiera de esas cifras, buscar palabras y elegir un período.
 
 La clasificación es automática, con listas de palabras armadas a partir del vocabulario de los tweets. La sección «Cómo se clasificó» de la página explica el método, sus límites, las fuentes y la cobertura.
@@ -26,7 +28,8 @@ La clasificación es automática, con listas de palabras armadas a partir del vo
 ## Herramientas
 
 - `herramientas/actualizar.py`: suma los tweets, respuestas y retweets nuevos, los clasifica, actualiza los CSV, `index.html` y `data/`, y publica (commit + push). `--sin-push` para no publicar, `--probar` para solo ver qué encontraría.
-- `herramientas/importar_retweets.py`: suma retweets de un conjunto externo (el CSV de milei.nulo.lol) sin duplicar.
+- `herramientas/importar_retweets.py`: suma retweets de un conjunto externo (el CSV de milei.nulo.lol) sin duplicar, y pone la hora exacta a los que la tenían estimada.
+- `herramientas/cuentas.py`: baja los perfiles públicos de las cuentas con las que interactúa, para las señales de automatización (posibles bots).
 - `herramientas/clasificar.py`: las listas de palabras y la función que marca cada texto.
 - `herramientas/marcar.py`: reglas agregadas después (NOLSALP, «domar», VLLC…); aplica las reglas nuevas a todo lo publicado sin rehacer la clasificación.
 

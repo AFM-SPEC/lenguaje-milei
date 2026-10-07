@@ -202,6 +202,29 @@ table.por-cuenta { width: 100%; min-width: 860px; font-size: 13.5px; margin-top:
 .sen-n { color: var(--muted); cursor: help; }
 .sen-nd { color: var(--muted); font-size: 12px; }
 
+/* ---------- cuándo está en X ---------- */
+.cuando { margin-top: 34px; }
+.horas-box { overflow-x: auto; }
+.horas { display: grid; grid-template-columns: 30px repeat(24, minmax(0, 1fr)); gap: 2px; }
+.horas .h-lab { font-size: 11px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+.horas .d-lab { font-size: 11.5px; color: var(--ink-2); align-self: center; }
+.horas .c { height: 22px; border-radius: 1px; background: rgba(11, 29, 58, var(--a, .04)); }
+.horas .c:hover { outline: 1.5px solid var(--ink); outline-offset: 0; }
+.horas-ley { display: flex; align-items: center; gap: 6px; justify-content: flex-end; font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+.horas-ley i { width: 90px; height: 8px; border-radius: 1px; background: linear-gradient(90deg, rgba(11, 29, 58, .05), rgba(11, 29, 58, 1)); }
+.horas-info { font-size: 13.5px; color: var(--ink-2); min-height: 1.5em; margin: 6px 0 0; }
+.sub-h { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); margin: 22px 0 8px; }
+.tiles-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#tiempo { display: block; width: 100%; }
+#tiempo .b { fill: var(--navy); } #tiempo .grid { stroke: var(--line); } #tiempo .base { stroke: var(--line-2); }
+#tiempo .yl, #tiempo .xl { fill: var(--muted); font: 500 11px var(--f-ui); } #tiempo .yl { text-anchor: end; } #tiempo .xl { text-anchor: middle; }
+#tiempo .hov { fill: var(--ink); opacity: .06; }
+.chequeo { font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.chequeo:empty { display: none; }
+.chequeo ul { margin: 4px 0 0; padding-left: 18px; }
+.chequeo b { color: var(--ink); }
+@media (max-width: 600px) { .tiles.tiles-3 { grid-template-columns: 1fr; } .horas { gap: 1px; } .horas .c { height: 18px; } }
+
 /* ---------- gráfico ---------- */
 .chart-sec { margin-top: 34px; }
 .sec-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 18px; margin-bottom: 10px; }
@@ -456,8 +479,31 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     </details>
   </section>
 
+  <section class="cuando" aria-labelledby="cuando-h">
+    <div class="sec-h">
+      <div>
+        <h2 id="cuando-h">¿Cuándo está en X?</h2>
+        <div class="sub" id="horas-sub"></div>
+      </div>
+    </div>
+    <div class="horas-box">
+      <div class="horas" id="horas" role="img" aria-label="Publicaciones por día de la semana y hora"></div>
+      <div class="horas-ley"><span>menos</span><i></i><span>más</span></div>
+    </div>
+    <p class="horas-info" id="horas-info" aria-live="polite"></p>
+    <h3 class="sub-h">Tiempo estimado en X por día</h3>
+    <div class="tiles tiles-3" id="tiempo-tiles"></div>
+    <div class="chart-box" id="tiempo-box"><svg id="tiempo" role="img" aria-label="Tiempo estimado en X por día, promedio de cada mes"></svg><div class="tip" id="tiempo-tip" hidden></div></div>
+    <p class="nota">El mapa usa las publicaciones con hora exacta de la selección (tweets, respuestas y retweets con hora registrada), en hora de Argentina. El tiempo en X se estima como milei.nulo.lol: las publicaciones separadas por menos de 3 minutos forman una sesión, a cada sesión se le suman 2 minutos, y se suman las sesiones del día. Es un piso: no ve el tiempo que pasa leyendo sin publicar ni los «me gusta», que son privados desde junio de 2024. Se muestra desde febrero de 2024, cuando los retweets empiezan a estar completos y con hora exacta; antes faltan muchos y la estimación quedaría corta.</p>
+  </section>
+
   <section class="explorar" aria-label="Explorar tweets">
     <aside class="filtros">
+      <div class="campo">
+        <label for="chequear">Chequear un tweet</label>
+        <input id="chequear" type="search" placeholder="Pegá el enlace de un tweet" autocomplete="off">
+        <div class="chequeo" id="chequeo" aria-live="polite"></div>
+      </div>
       <div class="campo">
         <label for="q">Buscar</label>
         <input id="q" type="search" placeholder="Palabra, frase o @usuario" autocomplete="off">
@@ -640,7 +686,10 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   const rangoActivo = () => S.from !== MK0 || S.to !== MK1;
   const rangoLabel = () => S.from === S.to ? mesLabel(S.from) : `${mesLabel(S.from)} – ${mesLabel(S.to)}`;
   let qTokens = [];
-  let lista = [], monthly = [], monthlyV = null, imp = null;
+  let lista = [], monthly = [], monthlyV = null, imp = null, horas = null;
+  // hora exacta: tweets y respuestas siempre; retweets con su número o con hora registrada
+  const horaExacta = (t) => t.kind === 'tweet' || t.kind === 'respuesta' || (t.kind === 'retweet' && (t.id || t.exacta));
+  const diaHora = (ts) => { const d = new Date((ts - OFF) * 1000); return d.getUTCDay() * 24 + d.getUTCHours(); };
   const propiosElegidos = () => S.tipos.has('tweet') || S.tipos.has('respuesta');
   const propiosLabel = () => TIPOS.filter(([k]) => k !== 'retweet' && S.tipos.has(k)).map(([, p]) => p).join(' + ');
   // el lema «Viva la libertad, carajo» no cuenta, o cuenta como procaz o como confrontativo (S.lema)
@@ -737,6 +786,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     imp = { n: [0, 0, 0, 0], s: {}, c: {} };
     for (const k of IMPACTO) { imp.s[k] = [0, 0, 0, 0]; imp.c[k] = [0, 0, 0, 0]; }
     lista = [];
+    horas = new Array(7 * 24).fill(0);
     // ranking de cuentas: todo lo elegido salvo el filtro de cuenta (para poder pasar de una cuenta a otra)
     ranking = new Map();
     for (const src of R ? [T, R] : [T]) {
@@ -765,6 +815,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
         if (L < 0) vacios++; else counts[L]++;
         if (!nivelOk) continue;
         lista.push(t);
+        if (horaExacta(t)) horas[t.hd ?? (t.hd = diaHora(t.ts))]++;
         if (propio) {
           imp.n[li]++;
           for (const k of IMPACTO) if (tieneDato(t, k)) { imp.s[k][li] += t[k]; imp.c[k][li]++; }
@@ -782,6 +833,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     renderInteracciones();
     renderChart();
     renderTabla();
+    renderHoras();
     renderTerms();
     renderResumen();
     renderLista(true);
@@ -866,6 +918,125 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       + `<b>${fmt.format(bot)} son posibles bots</b> (${pct(iBot, iRev)} % de las interacciones revisadas) y `
       + `<b>${fmt.format(susp)} están suspendidas</b>${noenc ? ` y ${fmt.format(noenc)} no se encontraron` : ''} (${pct(iSusp, iRev)} %).`;
   }
+
+  // ---------- cuándo está en X ----------
+  const DIAS = [[1, 'Lun'], [2, 'Mar'], [3, 'Mié'], [4, 'Jue'], [5, 'Vie'], [6, 'Sáb'], [0, 'Dom']];
+  const DIAS_L = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  function renderHoras() {
+    const tot = horas.reduce((a, b) => a + b, 0), max = Math.max(1, ...horas);
+    let h = '<span></span>';
+    for (let hr = 0; hr < 24; hr++) h += `<span class="h-lab">${hr % 3 ? '' : hr}</span>`;
+    for (const [d, lab] of DIAS) {
+      h += `<span class="d-lab">${lab}</span>`;
+      for (let hr = 0; hr < 24; hr++) {
+        const v = horas[d * 24 + hr];
+        h += `<span class="c" data-c="${d * 24 + hr}" style="--a:${v ? (0.06 + 0.94 * v / max).toFixed(3) : 0.035}"></span>`;
+      }
+    }
+    $('#horas').innerHTML = h;
+    let pico = 0; horas.forEach((v, i) => { if (v > horas[pico]) pico = i; });
+    $('#horas-sub').textContent = tot ? `${fmt.format(tot)} publicaciones con hora exacta en la selección. El momento con más actividad: los ${DIAS_L[Math.floor(pico / 24)]} a las ${pico % 24} h.` : 'No hay publicaciones con hora exacta en esta selección.';
+    $('#horas-info').textContent = '';
+  }
+  $('#horas').addEventListener('mouseover', (e) => {
+    const c = e.target.closest('.c'); if (!c) return;
+    const i = +c.dataset.c, tot = horas.reduce((a, b) => a + b, 0);
+    $('#horas-info').textContent = `${DIAS_L[Math.floor(i / 24)].replace(/^./, (x) => x.toUpperCase())} de ${i % 24} a ${i % 24 + 1} h: ${fmt.format(horas[i])} publicaciones (${tot ? fmt1.format(horas[i] / tot * 100) : 0} %).`;
+  });
+
+  // tiempo estimado en X: sesiones de publicaciones separadas por menos de 3 minutos, más 2 minutos por sesión
+  const DESDE_TIEMPO = Date.UTC(2024, 1, 1) / 1000 + OFF; // 1 de febrero de 2024, hora de Argentina
+  let tiempo = null; // { dias: Map(día → minutos), meses: [[mk, minutos por día]] }
+  const fmtDur = (m) => { m = Math.round(m); return m >= 60 ? `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, '0')} min` : `${m} min`; };
+  function calcularTiempo() {
+    const ts = [];
+    for (const t of T) if (t.ts >= DESDE_TIEMPO) ts.push(t.ts);
+    let ultExacto = 0;
+    for (const t of R) if (t.kind === 'retweet' && (t.id || t.exacta) && t.ts >= DESDE_TIEMPO) { ts.push(t.ts); if (t.ts > ultExacto) ultExacto = t.ts; }
+    ts.sort((a, b) => a - b);
+    const dias = new Map();
+    let i = 0;
+    while (i < ts.length) {
+      let j = i;
+      while (j + 1 < ts.length && ts[j + 1] - ts[j] < 180 && diaDe(ts[j + 1]) === diaDe(ts[i])) j++;
+      const d = diaDe(ts[i]);
+      dias.set(d, (dias.get(d) || 0) + (ts[j] - ts[i]) / 60 + 2);
+      i = j + 1;
+    }
+    // hasta el último día con retweets de hora exacta (los de la búsqueda diaria tienen hora estimada hasta que se precisan)
+    const d0 = diaDe(DESDE_TIEMPO), d1 = diaDe(ultExacto) - 1;
+    const porMes = new Map();
+    for (let d = d0; d <= d1; d++) {
+      const f = new Date(d * 86400000), mk = f.getUTCFullYear() * 12 + f.getUTCMonth();
+      const e = porMes.get(mk) || [0, 0]; e[0] += dias.get(d) || 0; e[1]++; porMes.set(mk, e);
+    }
+    tiempo = { dias, d0, d1, meses: [...porMes.entries()].map(([mk, [m, n]]) => [mk, m / n]) };
+    renderTiempo();
+  }
+  function renderTiempo() {
+    if (!tiempo) { $('#tiempo-tiles').innerHTML = '<div class="tile"><span class="t-sub">Calculando…</span></div>'; return; }
+    const { dias, d0, d1, meses } = tiempo;
+    const prom = (a, b) => { let m = 0; for (let d = a; d <= b; d++) m += dias.get(d) || 0; return m / Math.max(1, b - a + 1); };
+    let top = d0; for (const [d, m] of dias) if (m > (dias.get(top) || 0)) top = d;
+    const fd = (d) => { const f = new Date(d * 86400000); return `${f.getUTCDate()} ${MES[f.getUTCMonth()]} ${f.getUTCFullYear()}`; };
+    $('#tiempo-tiles').innerHTML = [
+      ['Últimos 30 días', fmtDur(prom(d1 - 29, d1)), 'por día, en promedio'],
+      ['Desde febrero de 2024', fmtDur(prom(d0, d1)), 'por día, en promedio'],
+      ['El día con más tiempo', fmtDur(dias.get(top) || 0), fd(top)],
+    ].map(([l, v, sub]) => `<div class="tile"><span class="t-lab">${l}</span><span class="t-num">${v}</span><span class="t-sub">${sub}</span></div>`).join('');
+    // barras: promedio diario de cada mes
+    const box = $('#tiempo-box'), W = Math.max(280, box.clientWidth), H = W < 600 ? 150 : 180;
+    const ml = 40, mr = 4, mt = 8, mb = 22, iw = W - ml - mr, ih = H - mt - mb, band = iw / meses.length;
+    const max = Math.max(60, ...meses.map(([, m]) => m)), top_h = Math.ceil(max / 60) * 60;
+    const yv = (m) => mt + ih - (m / top_h) * ih;
+    let svgS = '';
+    for (let m = 0; m <= top_h; m += 60) svgS += `<line class="${m ? 'grid' : 'base'}" x1="${ml}" x2="${W - mr}" y1="${yv(m)}" y2="${yv(m)}"/><text class="yl" x="${ml - 6}" y="${yv(m)}" dy="0.32em">${m / 60} h</text>`;
+    meses.forEach(([mk, m], i) => {
+      const bw = Math.max(2, Math.min(28, band - 3)), x = ml + i * band + (band - bw) / 2;
+      svgS += `<path class="b" d="${topRounded(x, yv(m), bw, Math.max(0.8, mt + ih - yv(m)), 3)}"/>`;
+      if (mk % 12 === 0 || i === 0) svgS += `<text class="xl" x="${ml + i * band + band / 2}" y="${H - 6}">${mk % 12 === 0 ? Math.floor(mk / 12) : mesLabel(mk)}</text>`;
+    });
+    svgS += `<rect class="hov" id="tiempo-hov" x="0" y="${mt}" width="${band}" height="${ih}" visibility="hidden"/>`;
+    const svgT = $('#tiempo');
+    svgT.setAttribute('viewBox', `0 0 ${W} ${H}`); svgT.setAttribute('height', H); svgT.innerHTML = svgS;
+    svgT.onmousemove = (e) => {
+      const r = svgT.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, i = Math.floor((x - ml) / band);
+      const tip = $('#tiempo-tip');
+      if (i < 0 || i >= meses.length) { tip.hidden = true; $('#tiempo-hov').setAttribute('visibility', 'hidden'); return; }
+      tip.innerHTML = `<b>${mesLabel(meses[i][0])}</b>${fmtDur(meses[i][1])} por día en promedio`;
+      tip.hidden = false;
+      const cx = (ml + (i + 0.5) * band) * r.width / W;
+      tip.style.left = Math.max(0, Math.min(cx + 12, box.clientWidth - tip.offsetWidth)) + 'px';
+      const hv = $('#tiempo-hov'); hv.setAttribute('x', ml + i * band); hv.setAttribute('visibility', 'visible');
+    };
+    svgT.onmouseleave = () => { $('#tiempo-tip').hidden = true; $('#tiempo-hov').setAttribute('visibility', 'hidden'); };
+  }
+  new ResizeObserver(() => { if (tiempo) renderTiempo(); }).observe($('#tiempo-box'));
+
+  // ---------- chequear un tweet ----------
+  let INDICE = null;
+  function chequear(valor) {
+    const out = $('#chequeo');
+    const m = (valor || '').match(/status(?:es)?\/(\d{5,20})/) || (valor || '').trim().match(/^(\d{5,20})$/);
+    if (!valor.trim()) { out.innerHTML = ''; return; }
+    if (!m) { out.textContent = 'Pegá el enlace de un tweet (x.com/…/status/…) o su número.'; return; }
+    const id = m[1];
+    if (!INDICE) {
+      INDICE = { propio: new Map(), rt: new Map(), like: new Map() };
+      for (const t of T) INDICE.propio.set(t.id, t);
+      for (const t of R) (t.kind === 'like' ? INDICE.like : INDICE.rt).set(String(oidTexto(t.oid)), t);
+    }
+    const res = [];
+    const p = INDICE.propio.get(id);
+    if (p) res.push(`Es ${p.kind === 'respuesta' ? 'una respuesta' : 'un tweet'} de Milei del ${fechaCorta(p.ts)} (lenguaje ${level(p) < 0 ? 'sin texto' : LV[level(p)].toLowerCase()}).`);
+    const r = INDICE.rt.get(id);
+    if (r) res.push(`Milei lo <b>retuiteó</b> el ${r.id || r.exacta ? '' : '≈ '}${fechaCorta(r.ts)}${r.autor ? ` (tweet de @${esc(r.autor)})` : ''}.`);
+    const l = INDICE.like.get(id);
+    if (l) res.push(`Milei le dio <b>me gusta</b> (≈ ${fechaCorta(l.ts, false)})${l.autor ? `; es de @${esc(l.autor)}` : ''}.`);
+    out.innerHTML = res.length ? `<ul>${res.map((x) => `<li>${x}</li>`).join('')}</ul>`
+      : 'No aparece en los datos: no es de Milei ni figura entre sus retweets o «me gusta» registrados. Ojo: faltan retweets de 2015 a 2019 y de julio de 2022 a enero de 2024, y los «me gusta» solo están de noviembre de 2023 a junio de 2024.';
+  }
+  $('#chequear').addEventListener('input', (e) => chequear(e.target.value));
 
   // ---------- impacto ----------
   function renderImpacto() {
@@ -1364,6 +1535,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
       .then(() => {
         btn.removeAttribute('aria-busy');
         performance.mark('retweets');
+        calcularTiempo(); INDICE = null;
         // perfiles de las cuentas para las señales de automatización
         fetch('data/cuentas.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
           .then((c) => { clasificarCuentas(c); update(false); })

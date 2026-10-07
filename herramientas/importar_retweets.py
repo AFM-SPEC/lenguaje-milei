@@ -12,7 +12,7 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from actualizar import (COLS_RT, CSV_RT, leer_csv, escribir_csv, leer_index, sumar_retweets_web,
-                        escribir_index_y_readme, log, fila_nulo, leer_nulo)
+                        escribir_index_y_readme, log, fila_nulo, leer_nulo, precisar_retweets)
 
 
 def main(ruta, probar):
@@ -26,11 +26,16 @@ def main(ruta, probar):
         vistos.add(r['postId']); nuevos.append(fila_nulo(r))
     log(f'{len(externos)} retweets en el archivo, {len(nuevos)} nuevos')
     print('  por año:', sorted(Counter(r['fecha_retweet'][:4] for r in nuevos).items()))
-    if probar or not nuevos:
+    exactos = {f['id_original']: f['fecha_retweet'] for f in map(fila_nulo, externos)}
+    a_precisar = sum(1 for r in filas_rt if r['fecha_aproximada'] and not r['id_retweet'] and r['id_original'] in exactos)
+    print(f'  con hora estimada que pasan a exacta: {a_precisar}')
+    if probar or not (nuevos or a_precisar):
         return
-    escribir_csv(CSV_RT, sorted(filas_rt + nuevos, key=lambda r: r['fecha_retweet'], reverse=True), COLS_RT)
     s, m, datos = leer_index()
     sumar_retweets_web(datos, nuevos)
+    filas_rt = filas_rt + nuevos
+    precisar_retweets(datos, filas_rt, exactos)
+    escribir_csv(CSV_RT, sorted(filas_rt, key=lambda r: r['fecha_retweet'], reverse=True), COLS_RT)
     escribir_index_y_readme(s, m, datos, int(time.time()))
 
 

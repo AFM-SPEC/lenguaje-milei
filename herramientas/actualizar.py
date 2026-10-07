@@ -210,6 +210,27 @@ def sumar_retweets_web(datos, nuevos_rt):
             e.update(n=len(d['t']), mk0=mk(d['t'][0][1]), mk1=mk(d['t'][-1][1]))
 
 
+def precisar_retweets(datos, filas_rt, exactos):
+    """Pone la hora exacta (exactos: {id_original: fecha ISO}) a los retweets que la tenían estimada, en el CSV y en la web."""
+    n = 0
+    for r in filas_rt:
+        if r['fecha_aproximada'] and not r['id_retweet'] and r['id_original'] in exactos:
+            r['fecha_retweet'] = exactos[r['id_original']]; r['fecha_aproximada'] = ''; n += 1
+    if not n:
+        return 0
+    for e in datos['rt']:
+        ruta = os.path.join(RAIZ, e['f']); d = json.load(open(ruta, encoding='utf-8')); tocado = False
+        for fila in d['t']:
+            if not fila[0] and len(fila) < 12 and fila[3] in exactos:
+                fila[1] = ts_de(exactos[fila[3]]); fila.append(1); tocado = True
+        if tocado:
+            d['t'].sort(key=lambda f: f[1])
+            with open(ruta, 'w', encoding='utf-8') as f:
+                f.write(json.dumps(d, ensure_ascii=False, separators=(',', ':')))
+            e.update(n=len(d['t']), mk0=mk(d['t'][0][1]), mk1=mk(d['t'][-1][1]))
+    return n
+
+
 def escribir_index_y_readme(s, m, datos, ahora):
     """Guarda los datos en index.html y actualiza las fechas y cifras de la página y del README."""
     hoy = fecha_larga(ahora)
@@ -285,6 +306,7 @@ def main(probar, publicar):
     ya = {r['id_original'] for r in filas_rt if r['fecha_retweet'] >= desde}
     nuevos_rt = [r for i, r in rts.items() if i not in ya]
     # los lunes, además, lo que registró milei.nulo.lol en los últimos 10 días (hora exacta)
+    exactos_nulo = {}
     if time.gmtime(ahora - OFF).tm_wday == 0:
         tmp = os.path.join(RAIZ, '.git', 'nulo_retweets.csv')
         r = subprocess.run(['curl', '-s', '-m', '600', '-A', 'Mozilla/5.0', '-o', tmp, '-w', '%{http_code}', NULO_CSV],
@@ -297,6 +319,7 @@ def main(probar, publicar):
                 if f['fecha_retweet'] >= desde_n and f['id_original'] not in todos_ids:
                     todos_ids.add(f['id_original']); extra.append(f)
             nuevos_rt += extra
+            exactos_nulo = {f['id_original']: f['fecha_retweet'] for f in map(fila_nulo, leer_nulo(tmp))}
             log(f'milei.nulo.lol: {len(extra)} retweets que la búsqueda no trajo')
         else:
             log(f'aviso: no se pudo bajar el CSV de milei.nulo.lol (HTTP {r.stdout})')
@@ -325,6 +348,12 @@ def main(probar, publicar):
     datos['own'] = [{'n': len(datos['t']), 'mk0': mk(datos['t'][0][1]), 'mk1': mk(datos['t'][-1][1])}]
 
     sumar_retweets_web(datos, nuevos_rt)
+    if exactos_nulo:
+        filas_rt = leer_csv(CSV_RT)
+        n_prec = precisar_retweets(datos, filas_rt, exactos_nulo)
+        if n_prec:
+            escribir_csv(CSV_RT, sorted(filas_rt, key=lambda r: r['fecha_retweet'], reverse=True), COLS_RT)
+            log(f'milei.nulo.lol: {n_prec} retweets pasan a tener hora exacta')
 
     escribir_index_y_readme(s, m, datos, ahora)
     g = time.gmtime(ahora - OFF)
