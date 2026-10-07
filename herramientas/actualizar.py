@@ -357,6 +357,12 @@ def main(probar, publicar):
 
     escribir_index_y_readme(s, m, datos, ahora)
     g = time.gmtime(ahora - OFF)
+    # perfiles de las cuentas con las que interactúa (señales de bots): hasta 1.500 por día
+    try:
+        from cuentas import actualizar as perfiles
+        perfiles(maximo=1500, log=log)
+    except Exception as e:
+        log('aviso: no se pudieron revisar perfiles:', e)
 
     if not publicar:
         return
