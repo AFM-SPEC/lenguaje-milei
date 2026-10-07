@@ -1110,7 +1110,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   function renderChart() {
     const box = $('#chart-box');
     const W = Math.max(280, box.clientWidth);
-    const H = W < 600 ? 170 : 210;
+    const H = W < 600 ? 240 : 340;
     const met = S.metrica, M = monthlyV || monthly;
     const ml = met === 'n' ? 46 : 58, mr = 4, mt = 10, mb = 24; // ml: lugar para «10.000» o «1.500 M» en Libre Franklin
     const iw = W - ml - mr, ih = H - mt - mb;
@@ -1120,7 +1120,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const series = met !== 'n' && !propiosElegidos() ? [] : nivelesSel().reverse();
     const tot = M.map((m) => series.reduce((s, l) => s + m[l], 0));
     const max = Math.max(1, ...tot);
-    const step = Math.max(1, niceStep(max, 3)); // son cantidades: sin rayas de 0,5
+    const step = Math.max(1, niceStep(max, H > 300 ? 5 : 3)); // son cantidades: sin rayas de 0,5
     const top = Math.ceil(max / step) * step;
     const yv = (v) => mt + ih - (v / top) * ih;
     let s = '';
