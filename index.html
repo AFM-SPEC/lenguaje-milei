@@ -157,9 +157,10 @@ table.por-nivel { margin-top: 14px; width: 100%; min-width: 640px; font-size: 13
 }
 .nota { font-size: 13px; line-height: 1.45; color: var(--muted); margin: 8px 0 0; max-width: 90ch; }
 .metricas { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
-.metrica, .clase, .por { font-size: 12.5px; background: none; border: 1px solid var(--line-2); border-radius: var(--r); padding: 4px 10px; cursor: pointer; color: var(--ink-2); }
-.metrica:hover, .clase:hover, .por:hover { border-color: var(--ink-2); }
-.metrica[aria-pressed="true"], .clase[aria-pressed="true"], .por[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--crema); }
+.metricas .sep { width: 1px; align-self: stretch; background: var(--line-2); margin: 0 4px; }
+.metrica, .clase, .por, .esc { font-size: 12.5px; background: none; border: 1px solid var(--line-2); border-radius: var(--r); padding: 4px 10px; cursor: pointer; color: var(--ink-2); }
+.metrica:hover, .clase:hover, .por:hover, .esc:hover { border-color: var(--ink-2); }
+.metrica[aria-pressed="true"], .clase[aria-pressed="true"], .por[aria-pressed="true"], .esc[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--crema); }
 
 /* ---------- con quién interactúa ---------- */
 .interaccion { margin-top: 34px; }
@@ -461,6 +462,9 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
           <button type="button" class="metrica" data-metrica="likes" aria-pressed="false">Me gusta</button>
           <button type="button" class="metrica" data-metrica="rt" aria-pressed="false">Retweets recibidos</button>
           <button type="button" class="metrica" data-metrica="rep" aria-pressed="false">Respuestas recibidas</button>
+          <span class="sep" aria-hidden="true"></span>
+          <button type="button" class="esc" data-escala="n" aria-pressed="true">Cantidad</button>
+          <button type="button" class="esc" data-escala="pct" aria-pressed="false" title="Cada mes ocupa toda la altura: se ve qué parte es convencional, confrontativa o procaz">Ver en porcentaje</button>
         </div>
         <div class="sub" id="chart-sub"></div>
       </div>
@@ -1110,7 +1114,8 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   function renderChart() {
     const box = $('#chart-box');
     const W = Math.max(280, box.clientWidth);
-    const H = W < 600 ? 240 : 340;
+    const H = W < 600 ? 300 : 460;
+    const enPct = S.escala === 'pct';
     const met = S.metrica, M = monthlyV || monthly;
     const ml = met === 'n' ? 46 : 58, mr = 4, mt = 10, mb = 24; // ml: lugar para «10.000» o «1.500 M» en Libre Franklin
     const iw = W - ml - mr, ih = H - mt - mb;
@@ -1119,9 +1124,11 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     const bw = Math.max(0.8, Math.min(24, band - gapX));
     const series = met !== 'n' && !propiosElegidos() ? [] : nivelesSel().reverse();
     const tot = M.map((m) => series.reduce((s, l) => s + m[l], 0));
-    const max = Math.max(1, ...tot);
-    const step = Math.max(1, niceStep(max, H > 300 ? 5 : 3)); // son cantidades: sin rayas de 0,5
-    const top = Math.ceil(max / step) * step;
+    // en porcentaje, cada mes ocupa toda la altura y se ve la proporción de cada nivel
+    const valor = (i, l) => enPct ? (tot[i] ? M[i][l] / tot[i] * 100 : 0) : M[i][l];
+    const max = enPct ? 100 : Math.max(1, ...tot);
+    const step = enPct ? 25 : Math.max(1, niceStep(max, H > 300 ? 5 : 3)); // son cantidades: sin rayas de 0,5
+    const top = enPct ? 100 : Math.ceil(max / step) * step;
     const yv = (v) => mt + ih - (v / top) * ih;
     let s = '';
     if (rangoActivo()) {
@@ -1130,7 +1137,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     }
     for (let v = 0; v <= top + 1e-9; v += step) {
       s += `<line class="${v ? 'grid' : 'base'}" x1="${ml}" x2="${W - mr}" y1="${yv(v)}" y2="${yv(v)}"/>`;
-      s += `<text class="yl" x="${ml - 7}" y="${yv(v)}" dy="0.32em">${met === 'n' ? fmt.format(v) : corto(v)}</text>`;
+      s += `<text class="yl" x="${ml - 7}" y="${yv(v)}" dy="0.32em">${enPct ? v + ' %' : met === 'n' ? fmt.format(v) : corto(v)}</text>`;
     }
     const y0 = Math.floor(MK0 / 12), y1 = Math.floor(MK1 / 12);
     const every = 12 * band >= 38 ? 1 : 2;
@@ -1142,10 +1149,10 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     }
     for (let i = 0; i < NM; i++) {
       const x = ml + i * band + (band - bw) / 2;
-      const nz = series.filter((l) => M[i][l] > 0);
+      const nz = series.filter((l) => valor(i, l) > 0);
       let cum = 0;
       nz.forEach((l, j) => {
-        const h = (M[i][l] / top) * ih;
+        const h = (valor(i, l) / top) * ih;
         let yy = mt + ih - cum - h, hh = h;
         if (j > 0 && h > 2.5) hh = h - 2;
         cum += h;
@@ -1174,6 +1181,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
     $('#chart-h').textContent = `${METRICAS[met]} por mes`;
     svg.setAttribute('aria-label', `${METRICAS[met]} por mes y nivel de lenguaje`);
     document.querySelectorAll('.metrica').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.metrica === met)));
+    document.querySelectorAll('.esc').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.escala === (S.escala || 'n'))));
     $('#tabla-sum').textContent = `Ver la tabla (${METRICAS[met].toLowerCase()})`;
     $('#chart-sub').textContent = (met === 'n' ? '' : `${METRICAS[met]} de `) + (met === 'n' ? tl.charAt(0).toUpperCase() + tl.slice(1) : tl) + ', '
       + (todosNiveles() ? 'todos los niveles' : S.niveles.size ? `solo lenguaje ${nivelesLabel()}` : 'ningún nivel elegido')
@@ -1477,6 +1485,7 @@ mark.m0 { background: none; text-decoration: underline dotted var(--muted); text
   $('#q').addEventListener('input', (e) => { clearTimeout(tq); tq = setTimeout(() => { S.q = e.target.value; update(); }, 140); });
   $('#sort').addEventListener('change', (e) => { S.sort = e.target.value; update(); });
   document.querySelectorAll('.metrica').forEach((b) => b.addEventListener('click', () => { S.metrica = b.dataset.metrica; update(false); }));
+  document.querySelectorAll('.esc').forEach((b) => b.addEventListener('click', () => { S.escala = b.dataset.escala; renderChart(); }));
   document.querySelectorAll('.inter').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.inter;
     if (S.inter.has(k)) S.inter.delete(k); else S.inter.add(k);
