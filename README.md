@@ -2,8 +2,8 @@
 
 Explorador de los tweets, respuestas y retweets de Javier Milei (@JMilei) entre octubre de 2015 y octubre de 2026, clasificados en tres niveles de lenguaje: convencional, confrontativo y procaz.
 
-- 23.098 tweets y 16.532 respuestas, incluidos en `index.html`.
-- 229.368 retweets en `data/`, un archivo por año (o parte de año), que la página carga al abrirse.
+- 23.105 tweets y 16.532 respuestas, incluidos en `index.html`.
+- 229.472 retweets en `data/`, un archivo por año (o parte de año), que la página carga al abrirse.
 
 Se actualiza todos los días con lo nuevo. Página: https://afm-spec.github.io/lenguaje-milei/
 
